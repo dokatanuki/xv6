@@ -32,12 +32,16 @@ seginit(void)
 // Return the address of the PTE in page table pgdir
 // that corresponds to virtual address va.  If alloc!=0,
 // create any required page table pages.
+// vaに対応するpteをpgdirから探して、そのアドレスを返す
+// alloc!=0の場合はページテーブルの領域を確保して、0詰めを行い、
 static pte_t *
 walkpgdir(pde_t *pgdir, const void *va, int alloc)
 {
   pde_t *pde;
   pte_t *pgtab;
 
+  // pdeにはvaに対応するページテーブルへのアドレスが入る
+  // PDX: vaの上位10bitを見て、ページディレクトリ内のページテーブルへのオフセットを求める
   pde = &pgdir[PDX(va)];
   if(*pde & PTE_P){
     pgtab = (pte_t*)P2V(PTE_ADDR(*pde));
@@ -49,27 +53,36 @@ walkpgdir(pde_t *pgdir, const void *va, int alloc)
     // The permissions here are overly generous, but they can
     // be further restricted by the permissions in the page table
     // entries, if necessary.
+	// 確保したpgtabをvaに対応するページテーブルとしてセットする
     *pde = V2P(pgtab) | PTE_P | PTE_W | PTE_U;
   }
+  // vaに対応するpteへのアドレスを返す
+  // PTX: vaの中10bitを見て、ページテーブル内のpteへのオフセットを求める
   return &pgtab[PTX(va)];
 }
 
 // Create PTEs for virtual addresses starting at va that refer to
 // physical addresses starting at pa. va and size might not
 // be page-aligned.
+// 仮想アドレス[va, va+size]を, 物理アドレス[pa, pa+size]と対応付けるpte'sをpgdirにセットする
+// シーケンシャルにアドレスを割り当てる
 static int
 mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
 {
   char *a, *last;
   pte_t *pte;
 
+  // オフセットを切り下げる
   a = (char*)PGROUNDDOWN((uint)va);
   last = (char*)PGROUNDDOWN(((uint)va) + size - 1);
   for(;;){
+	// walkpgdir: 仮想アドレスaに対応するPTEへのアドレスをpgdirから探してくる
     if((pte = walkpgdir(pgdir, a, 1)) == 0)
       return -1;
+	// aに対応するページテーブルは0詰めされていて、pteは存在しないはず
     if(*pte & PTE_P)
       panic("remap");
+	// エントリをセットする
     *pte = pa | perm | PTE_P;
     if(a == last)
       break;
@@ -102,6 +115,7 @@ mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
 
 // This table defines the kernel's mappings, which are present in
 // every process's page table.
+// カーネルの仮想アドレスと物理アドレスの対応付け
 static struct kmap {
   void *virt;
   uint phys_start;
@@ -109,26 +123,38 @@ static struct kmap {
   int perm;
 } kmap[] = {
  { (void*)KERNBASE, 0,             EXTMEM,    PTE_W}, // I/O space
- { (void*)KERNLINK, V2P(KERNLINK), V2P(data), 0},     // kern text+rodata
+ { (void*)KERNLINK, V2P(KERNLINK), V2P(data), 0},     // kern text+rodata READ_ONLY
  { (void*)data,     V2P(data),     PHYSTOP,   PTE_W}, // kern data+memory
  { (void*)DEVSPACE, DEVSPACE,      0,         PTE_W}, // more devices
 };
 
 // Set up kernel part of a page table.
+// ページディレクトリのための物理メモリを確保し、kmapに記された通りにマッピングを行う
+// マッピングされたpgdirへのアドレスを返す
 pde_t*
 setupkvm(void)
 {
   pde_t *pgdir;
   struct kmap *k;
 
+  // kalloc(): kmem.freelistの先頭アドレスが返ってくる
+  // 1024個のエントリ(4*1024=4KB)が格納できる領域を確保
   if((pgdir = (pde_t*)kalloc()) == 0)
     return 0;
   memset(pgdir, 0, PGSIZE);
+  // DEVSPACEは仮想アドレス空間におけるMMIOのアドレスのスタート番地
+  // PHYSTOPは使用するメモリの限界値を意味し、これがDEVSPACEより大きいとMMIO領域を侵食しかねない
   if (P2V(PHYSTOP) > (void*)DEVSPACE)
     panic("PHYSTOP too high");
+  // kmapに定義されているカーネルのアドレス空間にしたがってマッピングを行う
   for(k = kmap; k < &kmap[NELEM(kmap)]; k++)
+	// mappages: pgdirに対して必要に応じてページテーブルの領域を確保し、pteを作成する
     if(mappages(pgdir, k->virt, k->phys_end - k->phys_start,
                 (uint)k->phys_start, k->perm) < 0) {
+	  // 割り当てる物理アドレスがなかった場合にこのセクションに入る
+	  // まず呼ばれることはない
+	  // pgdirでマッピングされている全物理アドレスを解放しフリーリストへ追加
+	  // pgdirそのものの実体も解放し、フリーリストへ追加
       freevm(pgdir);
       return 0;
     }
@@ -137,9 +163,11 @@ setupkvm(void)
 
 // Allocate one page table for the machine for the kernel address
 // space for scheduler processes.
+// kpgdirを作成し、カーネルのページテーブルをセットする=>entrypgdirは無効になる
 void
 kvmalloc(void)
 {
+  // カーネルのテージテーブルのみマッピング
   kpgdir = setupkvm();
   switchkvm();
 }
@@ -174,6 +202,9 @@ switchuvm(struct proc *p)
   mycpu()->ts.iomb = (ushort) 0xFFFF;
   ltr(SEG_TSS << 3);
   lcr3(V2P(p->pgdir));  // switch to process's address space
+  // 同じプロセスなのに再度cr3にpgdirをセットする理由は、
+  // TLBのキャッシュを更新するため(ページの拡張、縮小による変化をTLBに伝達)
+  // 仮にcr3に再セットしない場合、拡張されたページの以前のパーミッションがTLBに残っていて、そのページにアクセスできないなどが起こりうる
   popcli();
 }
 
@@ -265,6 +296,7 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
   for(; a  < oldsz; a += PGSIZE){
     pte = walkpgdir(pgdir, (char*)a, 0);
     if(!pte)
+	  // PGADDR: オフセットとインデックスから仮想アドレスを求める
       a = PGADDR(PDX(a) + 1, 0, 0) - PGSIZE;
     else if((*pte & PTE_P) != 0){
       pa = PTE_ADDR(*pte);
@@ -280,6 +312,7 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 
 // Free a page table and all the physical memory pages
 // in the user part.
+// ページテーブルを解放し、対応する物理メモリも解放する
 void
 freevm(pde_t *pgdir)
 {
@@ -287,13 +320,18 @@ freevm(pde_t *pgdir)
 
   if(pgdir == 0)
     panic("freevm: no pgdir");
+  // ユーザ空間のアドレス空間を縮小する
   deallocuvm(pgdir, KERNBASE, 0);
+  // pgdirのなかのページテーブルを線形に
   for(i = 0; i < NPDENTRIES; i++){
     if(pgdir[i] & PTE_P){
+	  // ページテーブルのPPNを取り出し、仮想アドレスに変換
       char * v = P2V(PTE_ADDR(pgdir[i]));
+	  // 仮想アドレスvが指している物理ページ(ページテーブルの実体)を解放し、フリーリストに追加
       kfree(v);
     }
   }
+  // 仮想アドレスvが指している物理ページ(ページディレクトリの実体)を解放し、フリーリストに追加
   kfree((char*)pgdir);
 }
 
@@ -360,6 +398,7 @@ uva2ka(pde_t *pgdir, char *uva)
 // Copy len bytes from p to user address va in page table pgdir.
 // Most useful when pgdir is not the current page table.
 // uva2ka ensures this only works for PTE_U pages.
+// ユーザ空間の仮想アドレスに対応する物理アドレスに対して、対象のデータをコピーする
 int
 copyout(pde_t *pgdir, uint va, void *p, uint len)
 {

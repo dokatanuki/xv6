@@ -120,9 +120,11 @@ struct segdesc {
 #define PGADDR(d, t, o) ((uint)((d) << PDXSHIFT | (t) << PTXSHIFT | (o)))
 
 // Page directory and page table constants.
-#define NPDENTRIES      1024    // # directory entries per page directory
-#define NPTENTRIES      1024    // # PTEs per page table
-#define PGSIZE          4096    // bytes mapped by a page
+// xv6は32bitであり、仮想アドレス空間は全部で2**32
+// TBC
+#define NPDENTRIES      1024    // # directory entries per page directory 1024=2**10
+#define NPTENTRIES      1024    // # PTEs per page table 1024=2**10
+#define PGSIZE          4096    // bytes mapped by a page 4096=2**12
 
 #define PGSHIFT         12      // log2(PGSIZE)
 #define PTXSHIFT        12      // offset of PTX in a linear address
@@ -143,6 +145,7 @@ struct segdesc {
 #define PTE_MBZ         0x180   // Bits must be zero
 
 // Address in page table or page directory entry
+// PPNを取り出す
 #define PTE_ADDR(pte)   ((uint)(pte) & ~0xFFF)
 #define PTE_FLAGS(pte)  ((uint)(pte) &  0xFFF)
 

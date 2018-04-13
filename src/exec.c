@@ -21,17 +21,20 @@ exec(char *path, char **argv)
 
   begin_op();
 
+  // namei(path): pathをOpenし、inodeを返す
   if((ip = namei(path)) == 0){
     end_op();
     cprintf("exec: fail\n");
     return -1;
   }
+  // inodeをロックする
   ilock(ip);
   pgdir = 0;
 
   // Check ELF header
   if(readi(ip, (char*)&elf, 0, sizeof(elf)) != sizeof(elf))
     goto bad;
+  // 対象ファイルがELF形式になっているか
   if(elf.magic != ELF_MAGIC)
     goto bad;
 

@@ -17,8 +17,12 @@ extern char end[]; // first address after kernel loaded from ELF file
 int
 main(void)
 {
+  // 4MB+KERNBASE-end分の領域を解放し、カーネルのフリーリストにつなげる
+  // 仮想アドレス空間における範囲を指定している
   kinit1(end, P2V(4*1024*1024)); // phys page allocator
+  // schedulerが利用するkpgdirを作成し、cr3にセットする
   kvmalloc();      // kernel page table
+  // -----------↓ ここからcr3=kpgdir↓ -----------
   mpinit();        // detect other processors
   lapicinit();     // interrupt controller
   seginit();       // segment descriptors
@@ -32,6 +36,7 @@ main(void)
   fileinit();      // file table
   ideinit();       // disk 
   startothers();   // start other processors
+  // 4MBからMMIO領域の手前(物理アドレスの限界)までをフリーリストにつなげる
   kinit2(P2V(4*1024*1024), P2V(PHYSTOP)); // must come after startothers()
   userinit();      // first user process
   mpmain();        // finish this processor's setup
@@ -98,7 +103,9 @@ startothers(void)
 // Page directories (and page tables) must start on page boundaries,
 // hence the __aligned__ attribute.
 // PTE_PS in a page directory entry enables 4Mbyte pages.
-
+// attributeはgccにおけるオプション
+// [Specifying Attributes of Variables](https://gcc.gnu.org/onlinedocs/gcc-3.3/gcc/Variable-Attributes.html#Variable%20Attributes "Specifying Attributes of Variables")
+// 仮想アドレス[0, 4MB), [KERNBASE, KERNBASE+4MB)を物理アドレス[0, 4MB)と対応づけるマッピング
 __attribute__((__aligned__(PGSIZE)))
 pde_t entrypgdir[NPDENTRIES] = {
   // Map VA's [0, 4MB) to PA's [0, 4MB)
