@@ -122,6 +122,7 @@ recover_from_log(void)
 }
 
 // called at the start of each FS system call.
+// ファイルシステムに関するシステムコールではじめに呼ばれる
 void
 begin_op(void)
 {

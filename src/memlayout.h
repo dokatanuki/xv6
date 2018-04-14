@@ -13,6 +13,8 @@
 #define KERNLINK (KERNBASE+EXTMEM)  // Address where kernel is linked
 
 #define V2P(a) (((uint) (a)) - KERNBASE)
+// Physical to Virtual
+// 物理アドレスを、カーネルの仮想アドレスに変換すると捉えるとすっきりする
 #define P2V(a) (((void *) (a)) + KERNBASE)
 
 #define V2P_WO(x) ((x) - KERNBASE)    // same as V2P, but without casts

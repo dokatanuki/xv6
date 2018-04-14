@@ -34,17 +34,21 @@ cpuid() {
 
 // Must be called with interrupts disabled to avoid the caller being
 // rescheduled between reading lapicid and running through the loop.
+// 割り込みを無効化した状態で呼ばれる必要がある
 struct cpu*
 mycpu(void)
 {
+  // APIC(Advanced Programmable Interrupt Controller, エイピック): インテルにより開発された、x86アーキテクチャにおける割り込みコントローラ
   int apicid, i;
   
+  // FLAGS register contains the current state of the processor
   if(readeflags()&FL_IF)
     panic("mycpu called with interrupts enabled\n");
   
   apicid = lapicid();
   // APIC IDs are not guaranteed to be contiguous. Maybe we should have
   // a reverse map, or reserve a register to store &cpus[i].
+  // TBC: 現在使用しているCPUを返す
   for (i = 0; i < ncpu; ++i) {
     if (cpus[i].apicid == apicid)
       return &cpus[i];
@@ -159,6 +163,7 @@ int
 growproc(int n)
 {
   uint sz;
+  // 現在実行中のプロセスの情報を取得
   struct proc *curproc = myproc();
 
   sz = curproc->sz;
@@ -170,6 +175,7 @@ growproc(int n)
       return -1;
   }
   curproc->sz = sz;
+  // cr3にpgdirを再セットし、TLBを更新
   switchuvm(curproc);
   return 0;
 }

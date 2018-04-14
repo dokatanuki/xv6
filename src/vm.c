@@ -181,6 +181,7 @@ switchkvm(void)
 }
 
 // Switch TSS and h/w page table to correspond to process p.
+// pgdirを更新
 void
 switchuvm(struct proc *p)
 {
@@ -201,10 +202,10 @@ switchuvm(struct proc *p)
   // forbids I/O instructions (e.g., inb and outb) from user space
   mycpu()->ts.iomb = (ushort) 0xFFFF;
   ltr(SEG_TSS << 3);
-  lcr3(V2P(p->pgdir));  // switch to process's address space
   // 同じプロセスなのに再度cr3にpgdirをセットする理由は、
   // TLBのキャッシュを更新するため(ページの拡張、縮小による変化をTLBに伝達)
   // 仮にcr3に再セットしない場合、拡張されたページの以前のパーミッションがTLBに残っていて、そのページにアクセスできないなどが起こりうる
+  lcr3(V2P(p->pgdir));  // switch to process's address space
   popcli();
 }
 
@@ -225,6 +226,8 @@ inituvm(pde_t *pgdir, char *init, uint sz)
 
 // Load a program segment into pgdir.  addr must be page-aligned
 // and the pages from addr to addr+sz must already be mapped.
+// addr(仮想アドレス)に対応するページテーブルはマッピング済みである必要がある
+// それぞれのページに対応している物理アドレスに対してプログラムを逐次読みだす
 int
 loaduvm(pde_t *pgdir, char *addr, struct inode *ip, uint offset, uint sz)
 {
@@ -234,13 +237,17 @@ loaduvm(pde_t *pgdir, char *addr, struct inode *ip, uint offset, uint sz)
   if((uint) addr % PGSIZE != 0)
     panic("loaduvm: addr must be page aligned");
   for(i = 0; i < sz; i += PGSIZE){
+	// 仮想アドレスに対応する物理アドレスを求めるために、pteを探す
     if((pte = walkpgdir(pgdir, addr+i, 0)) == 0)
       panic("loaduvm: address should exist");
+	// PPNの取り出し(offset=0であるとみなせるため、ページの先頭を指している)
     pa = PTE_ADDR(*pte);
     if(sz - i < PGSIZE)
       n = sz - i;
     else
       n = PGSIZE;
+	// カーネル空間は全物理アドレスとシーケンシャルに対応しているため、
+	// 物理アドレスを仮想アドレスに変換して渡してやることで、任意の物理アドレスにアクセスできる
     if(readi(ip, P2V(pa), offset+i, n) != n)
       return -1;
   }
@@ -249,6 +256,7 @@ loaduvm(pde_t *pgdir, char *addr, struct inode *ip, uint offset, uint sz)
 
 // Allocate page tables and physical memory to grow process from oldsz to
 // newsz, which need not be page aligned.  Returns new size or 0 on error.
+// pgdirに対して、新しい領域を割り当てる
 int
 allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 {
@@ -382,16 +390,23 @@ bad:
 
 //PAGEBREAK!
 // Map user virtual address to kernel address.
+// ユーザの仮想アドレス空間におけるuvaをKERNBASE以上のカーネルの仮想アドレス空間のkvaに変換する
 char*
 uva2ka(pde_t *pgdir, char *uva)
 {
   pte_t *pte;
 
+  // ユーザの仮想アドレス空間におけるuvaに対応するpteを取り出す
+  // ユーザスタックの確保を行ったため、ページは存在するはず
   pte = walkpgdir(pgdir, uva, 0);
+  // pteが存在しているか
   if((*pte & PTE_P) == 0)
     return 0;
+  // pteへのアクセスが許可されているか
   if((*pte & PTE_U) == 0)
     return 0;
+  // PPNを取り出し、P2VマクロでKERNBASEだけ足してやる
+  // つまり、kernelの仮想アドレス空間のアドレスに変換している
   return (char*)P2V(PTE_ADDR(*pte));
 }
 
@@ -405,18 +420,30 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
   char *buf, *pa0;
   uint n, va0;
 
+  // buf(=p): コピー対象の文字列の先頭へのポインタ
   buf = (char*)p;
   while(len > 0){
+	// va: sp(文字列長だけ下に伸ばしたスタックポインタ)
+	// va0: vaが含まれるページの先頭
+	// ユーザスタックのサイズは1ページであるため、va0はスタックの限界値を示す
     va0 = (uint)PGROUNDDOWN(va);
+	// uva2ka: user virtual address to kernel address
+	// ユーザの仮想アドレス空間のアドレスをkernelの仮想アドレス空間のアドレスに変換している->カーネルから書き込みが可能
     pa0 = uva2ka(pgdir, (char*)va0);
     if(pa0 == 0)
       return -1;
+	// bufを積んだあとのstackのサイズ
+	// n: 書き込みをする文字数
+	// TBC: 何やってる？
     n = PGSIZE - (va - va0);
     if(n > len)
       n = len;
+	// カーネルの仮想アドレス空間にスタックの中身をコピーする
     memmove(pa0 + (va - va0), buf, n);
     len -= n;
     buf += n;
+	// vaは次のページの先頭を指す
+	// TBC: ユーザースタックの上はヒープ領域では？
     va = va0 + PGSIZE;
   }
   return 0;

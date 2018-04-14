@@ -103,7 +103,10 @@ pushcli(void)
   int eflags;
 
   eflags = readeflags();
+  // 割り込みを無効化する
   cli();
+  // pushしているため、ここは必ず0にはならない
+  // マルチスレッドではもしかしたら0になる？
   if(mycpu()->ncli == 0)
     mycpu()->intena = eflags & FL_IF;
   mycpu()->ncli += 1;

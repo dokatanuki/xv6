@@ -121,7 +121,6 @@ struct segdesc {
 
 // Page directory and page table constants.
 // xv6は32bitであり、仮想アドレス空間は全部で2**32
-// TBC
 #define NPDENTRIES      1024    // # directory entries per page directory 1024=2**10
 #define NPTENTRIES      1024    // # PTEs per page table 1024=2**10
 #define PGSIZE          4096    // bytes mapped by a page 4096=2**12
