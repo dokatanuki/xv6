@@ -1,5 +1,6 @@
 // x86 trap and interrupt constants.
 
+// intで割り込みを入れて，trapnoにこれらの値をセットし，なぜ呼び出されたのかを確認する
 // Processor-defined:
 #define T_DIVIDE         0      // divide error
 #define T_DEBUG          1      // debug exception

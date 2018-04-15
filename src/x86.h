@@ -147,6 +147,8 @@ lcr3(uint val)
 //PAGEBREAK: 36
 // Layout of the trap frame built on the stack by the
 // hardware and by trapasm.S, and passed to trap().
+// trapに引数として渡される
+// 
 struct trapframe {
   // registers as pushed by pusha
   uint edi;
@@ -167,12 +169,13 @@ struct trapframe {
   ushort padding3;
   ushort ds;
   ushort padding4;
+  // TBC: なんの番号？
   uint trapno;
 
   // below here defined by x86 hardware
   uint err;
   uint eip;
-  ushort cs;
+  ushort cs; // 現在のプロセスの特権レベルを示す(CPL)
   ushort padding5;
   uint eflags;
 

@@ -5,12 +5,15 @@
 #include "traps.h"
 
 
+# はじめに
 # exec(init, argv)
 .globl start
 start:
   pushl $argv
   pushl $init
+  // 戻り番地をゼロに指定する
   pushl $0  // where caller pc would be
+  // システムコールの番号をeaxに積む
   movl $SYS_exec, %eax
   int $T_SYSCALL
 

@@ -19,7 +19,7 @@ exec(char *path, char **argv)
   pde_t *pgdir, *oldpgdir;
   struct proc *curproc = myproc();
 
-  // TBC: FSに関する操作ではじめに呼び出される
+  // FSに関する操作ではじめに呼び出される
   begin_op();
 
   // namei(path): pathをOpenし、inodeを返す

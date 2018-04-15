@@ -24,6 +24,8 @@ extern int ncpu;
 // The layout of the context matches the layout of the stack in swtch.S
 // at the "Switch stacks" comment. Switch doesn't save eip explicitly,
 // but it is on the stack and allocproc() manipulates it.
+// TBC: x86 convention is that the caller has saved them.
+// eax, ecx, edxはcaller-saveなレジスタだから，swichが呼ばれた段階ですでにスタックに積まれている？
 struct context {
   uint edi;
   uint esi;

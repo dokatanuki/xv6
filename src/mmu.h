@@ -152,6 +152,7 @@ struct segdesc {
 typedef uint pte_t;
 
 // Task state segment format
+// switchuvmでpgdirを切り替える前に，プロセッサが保持しているtaskstateのss0にSEG_KDATA, esp0にp->kstack+KSTACKSIZEをセットする
 struct taskstate {
   uint link;         // Old ts selector
   uint esp0;         // Stack pointers and segment selectors
@@ -194,6 +195,7 @@ struct taskstate {
 
 // PAGEBREAK: 12
 // Gate descriptors for interrupts and traps
+// 割り込み番号に対応したハンドラへの権限をはじめとした情報を管理する構造体
 struct gatedesc {
   uint off_15_0 : 16;   // low 16 bits of offset in segment
   uint cs : 16;         // code segment selector
@@ -209,6 +211,7 @@ struct gatedesc {
 // Set up a normal interrupt/trap gate descriptor.
 // - istrap: 1 for a trap (= exception) gate, 0 for an interrupt gate.
 //   interrupt gate clears FL_IF, trap gate leaves FL_IF alone
+//   processからのシステムコールは割り込みを許可するが，デバイスからのraiseや0徐算，不正なメモリアクセスなどは割り込みを無効化する
 // - sel: Code segment selector for interrupt/trap handler
 // - off: Offset in code segment for interrupt/trap handler
 // - dpl: Descriptor Privilege Level -

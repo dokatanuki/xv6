@@ -48,7 +48,7 @@ mycpu(void)
   apicid = lapicid();
   // APIC IDs are not guaranteed to be contiguous. Maybe we should have
   // a reverse map, or reserve a register to store &cpus[i].
-  // TBC: 現在使用しているCPUを返す
+  // apicはCPUに固有の値？であるため，apicidが一致するcpuを探せばよい
   for (i = 0; i < ncpu; ++i) {
     if (cpus[i].apicid == apicid)
       return &cpus[i];
@@ -74,6 +74,7 @@ myproc(void) {
 // If found, change state to EMBRYO and initialize
 // state required to run in the kernel.
 // Otherwise return 0.
+// プロセステーブルからまだ使用されていないプロセス構造体を取り出す
 static struct proc*
 allocproc(void)
 {
@@ -91,29 +92,38 @@ allocproc(void)
 
 found:
   p->state = EMBRYO;
+  // ユニークなプロセスIDを割り当てる
   p->pid = nextpid++;
 
   release(&ptable.lock);
 
   // Allocate kernel stack.
+  // カーネルから利用されるカーネルスタックを割り当て(1ページ分)
   if((p->kstack = kalloc()) == 0){
     p->state = UNUSED;
     return 0;
   }
+  // スタックは上から下に伸びるため，spの位置を調節
   sp = p->kstack + KSTACKSIZE;
 
   // Leave room for trap frame.
+  // トラップフレームのサイズ分だけスタックを下に下げて，trapframeへのポインタとしてキャストする
+  // p->tf->elemでkstack内のelemにアクセスできる
   sp -= sizeof *p->tf;
   p->tf = (struct trapframe*)sp;
 
   // Set up new context to start executing at forkret,
   // which returns to trapret.
+  // spはchar*であるため，-4は-4byteを意味する
   sp -= 4;
+  // uintのポインタにキャストし，trapretを代入
   *(uint*)sp = (uint)trapret;
 
+  // contextの実体分だけスタックを下に下げる
   sp -= sizeof *p->context;
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
+  // eip: 実行される命令が格納される
   p->context->eip = (uint)forkret;
 
   return p;
@@ -127,21 +137,27 @@ userinit(void)
   struct proc *p;
   extern char _binary_initcode_start[], _binary_initcode_size[];
 
+  // プロセスが動くために必要な情報が詰まっているプロセス構造体を生成
+  // プロセスの名前やサイズ，contextへのポインタなどが入っている
+  // 1ページ分のメモリをkstackとして確保し，そのうちの各セクションへのポインタを保持している
   p = allocproc();
   
   initproc = p;
+  // setupkvm: カーネルの仮想アドレス空間を物理メモリにマッピング(シーケンシャルに対応している)
   if((p->pgdir = setupkvm()) == 0)
     panic("userinit: out of memory?");
+  // kallocにより1ページの物理アドレスを確保し，仮想アドレス[0, PGSIZE]に対応するマッピングを行う
+  // _binary_initcodeを確保した物理アドレスに読み出し，ユーザ空間からロードできるようにする
   inituvm(p->pgdir, _binary_initcode_start, (int)_binary_initcode_size);
   p->sz = PGSIZE;
   memset(p->tf, 0, sizeof(*p->tf));
-  p->tf->cs = (SEG_UCODE << 3) | DPL_USER;
-  p->tf->ds = (SEG_UDATA << 3) | DPL_USER;
+  p->tf->cs = (SEG_UCODE << 3) | DPL_USER;  // 下位2bitはこのセグメントにアクセスするために必要な権限, SEG_UCODEはユーザのコードであることを示している
+  p->tf->ds = (SEG_UDATA << 3) | DPL_USER;  // SEG_UDATAはユーザのデータ，スタックが収められていることを示している
   p->tf->es = p->tf->ds;
   p->tf->ss = p->tf->ds;
-  p->tf->eflags = FL_IF;
+  p->tf->eflags = FL_IF;  // 割り込みを許可する
   p->tf->esp = PGSIZE;
-  p->tf->eip = 0;  // beginning of initcode.S
+  p->tf->eip = 0;  // beginning of initcode.S  // このプロセスをどこから実行するか(仮想アドレスの0を指定する)
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
@@ -325,6 +341,8 @@ wait(void)
 //  - swtch to start running that process
 //  - eventually that process transfers control
 //      via swtch back to the scheduler.
+// 各CPUがスケジューラーを持つ
+// returnはせず，ループする
 void
 scheduler(void)
 {
@@ -346,9 +364,20 @@ scheduler(void)
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
       c->proc = p;
+	  // pgdirの切り替え
       switchuvm(p);
       p->state = RUNNING;
 
+	  // cpuが保持しているschedulerと, process構造体にセットされているコンテキスト
+	  /*
+		struct context {
+		  uint edi;
+		  uint esi;
+		  uint ebx;
+		  uint ebp;
+		  uint eip;
+		};
+	  */
       swtch(&(c->scheduler), p->context);
       switchkvm();
 
@@ -399,6 +428,7 @@ yield(void)
 
 // A fork child's very first scheduling by scheduler()
 // will swtch here.  "Return" to user space.
+// TBC: 
 void
 forkret(void)
 {
@@ -411,10 +441,12 @@ forkret(void)
     // of a regular process (e.g., they call sleep), and thus cannot
     // be run from main().
     first = 0;
+	// ROOTDEV: FSのルートとなるデバイスナンバー
     iinit(ROOTDEV);
     initlog(ROOTDEV);
   }
 
+  // 呼び出し元に戻る(trapret)
   // Return to "caller", actually trapret (see allocproc).
 }
 

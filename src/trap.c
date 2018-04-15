@@ -14,13 +14,17 @@ extern uint vectors[];  // in vectors.S: array of 256 entry pointers
 struct spinlock tickslock;
 uint ticks;
 
+// 256個のhandlerのテーブルであるIDT(Interrupt Descriptor Table)の初期化
 void
 tvinit(void)
 {
   int i;
 
+
+  // SETGATE(gate, istrap, sel, off, d)
   for(i = 0; i < 256; i++)
     SETGATE(idt[i], 0, SEG_KCODE<<3, vectors[i], 0);
+  // T_SYSCALL
   SETGATE(idt[T_SYSCALL], 1, SEG_KCODE<<3, vectors[T_SYSCALL], DPL_USER);
 
   initlock(&tickslock, "time");

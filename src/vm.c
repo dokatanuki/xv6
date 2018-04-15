@@ -196,7 +196,9 @@ switchuvm(struct proc *p)
   mycpu()->gdt[SEG_TSS] = SEG16(STS_T32A, &mycpu()->ts,
                                 sizeof(mycpu()->ts)-1, 0);
   mycpu()->gdt[SEG_TSS].s = 0;
+  // カーネルのデータ，スタックを使用していることを示す
   mycpu()->ts.ss0 = SEG_KDATA << 3;
+  // pのkstackのトップをtasksegmentのespにセット
   mycpu()->ts.esp0 = (uint)p->kstack + KSTACKSIZE;
   // setting IOPL=0 in eflags *and* iomb beyond the tss segment limit
   // forbids I/O instructions (e.g., inb and outb) from user space
@@ -218,9 +220,13 @@ inituvm(pde_t *pgdir, char *init, uint sz)
 
   if(sz >= PGSIZE)
     panic("inituvm: more than a page");
+  // 1ページ分のメモリを確保
   mem = kalloc();
   memset(mem, 0, PGSIZE);
+  // 確保した1ページを仮想アドレス[0, PGSIZE(4096byte)]に割り当てる
+  // ユーザの仮想アドレス空間であるため，PTE_Uフラグを立てる
   mappages(pgdir, 0, PGSIZE, V2P(mem), PTE_W|PTE_U);
+  // ユーザの仮想アドレス空間である仮想アドレス[0, PGSIZE]に対応する物理メモリにinitを読み出す
   memmove(mem, init, sz);
 }
 

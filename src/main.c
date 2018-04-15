@@ -31,6 +31,7 @@ main(void)
   consoleinit();   // console hardware
   uartinit();      // serial port
   pinit();         // process table
+  //
   tvinit();        // trap vectors
   binit();         // buffer cache
   fileinit();      // file table
@@ -38,6 +39,7 @@ main(void)
   startothers();   // start other processors
   // 4MBからMMIO領域の手前(物理アドレスの限界)までをフリーリストにつなげる
   kinit2(P2V(4*1024*1024), P2V(PHYSTOP)); // must come after startothers()
+  // 最初のプロセスのセットアップ(切り替えはmpmain)
   userinit();      // first user process
   mpmain();        // finish this processor's setup
 }

@@ -97,6 +97,9 @@ lapicinit(void)
   lapicw(TPR, 0);
 }
 
+// apicidをロードする
+// CPUで固有の値？であるため，こちらを取得して登録されているCPUから探索することで
+// どのCPUでプロセスが実行されているか特定できる
 int
 lapicid(void)
 {
