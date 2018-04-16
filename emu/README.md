@@ -10,7 +10,7 @@ Set up environment emulating xv6 by qemu.
 ## Installation
 1. Set up Vagrantfile and VirtualMachine
 ```
-$ git clone https://github.com/dokatanuki/xv6_qemu
+$ git clone https://github.com/dokatanuki/xv6/emu
 $ ./setup_vm.sh
 ```
 
