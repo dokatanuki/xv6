@@ -401,6 +401,8 @@ sys_exec(void)
   int i;
   uint uargv, uarg;
 
+  // argint: 第二引数, ユーザのespを利用して，int命令の次の命令番地の上に積まれている引数を取り出す
+  // argstr: 第一引数, ユーザのespを利用して，int命令の次の命令番地の上に積まれている引数を取り出す
   if(argstr(0, &path) < 0 || argint(1, (int*)&uargv) < 0){
     return -1;
   }

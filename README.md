@@ -100,4 +100,5 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ## Reference
 [Text:book-rev10.pdf](https://pdos.csail.mit.edu/6.828/2017/xv6/book-rev10.pdf "book-rev10.pdf")  
-[Code:xv6-rev10.pdf](https://pdos.csail.mit.edu/6.828/2017/xv6/xv6-rev10.pdf "xv6-rev10.pdf")
+[Code:xv6-rev10.pdf](https://pdos.csail.mit.edu/6.828/2017/xv6/xv6-rev10.pdf "xv6-rev10.pdf")  
+[intel ia-32 manual](https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf "intel ia-32 manual")  

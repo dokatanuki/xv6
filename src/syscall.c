@@ -19,8 +19,10 @@ fetchint(uint addr, int *ip)
 {
   struct proc *curproc = myproc();
 
+  // curproc->sz: ユーザの仮想アドレス空間における使用領域の最上部(heapが確保されている場合はその頂点)
   if(addr >= curproc->sz || addr+4 > curproc->sz)
     return -1;
+  // ポインタを参照して値を取りだす
   *ip = *(int*)(addr);
   return 0;
 }
@@ -38,6 +40,8 @@ fetchstr(uint addr, char **pp)
     return -1;
   *pp = (char*)addr;
   ep = (char*)curproc->sz;
+  // 終端文字まで読み込む
+  // 見つからなかったらユーザ空間から外に出てしまうため，エラーとする
   for(s = *pp; s < ep; s++){
     if(*s == 0)
       return s - *pp;
@@ -46,6 +50,7 @@ fetchstr(uint addr, char **pp)
 }
 
 // Fetch the nth 32-bit system call argument.
+// カーネルスタックのトラップフレームに積まれてるユーザスタックの位置を利用
 int
 argint(int n, int *ip)
 {
@@ -55,6 +60,8 @@ argint(int n, int *ip)
 // Fetch the nth word-sized system call argument as a pointer
 // to a block of memory of size bytes.  Check that the pointer
 // lies within the process address space.
+// ポインタをunsigned intとして取り出した後，char*にキャストしている
+// ポインタのアドレスはユーザ空間内に存在するかチェックする
 int
 argptr(int n, char **pp, int size)
 {
