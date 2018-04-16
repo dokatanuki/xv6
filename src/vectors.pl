@@ -17,11 +17,10 @@ for(my $i = 0; $i < 256; $i++){
     print "vector$i:\n";
 	# [0, 7], [9], [15, 16], [18, 255]
     if(!($i == 8 || ($i >= 10 && $i <= 14) || $i == 17)){
-		# TBC: $0はなに？
 		# error code
         print "  pushl \$0\n";
     }
-	# trapno
+	# trapno(割り込みの番号)を積む
     print "  pushl \$$i\n";
     print "  jmp alltraps\n";
 }

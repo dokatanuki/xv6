@@ -217,6 +217,7 @@ struct gatedesc {
 // - dpl: Descriptor Privilege Level -
 //        the privilege level required for software to invoke
 //        this interrupt/trap gate explicitly using an int instruction.
+// TCB: どうしてvectorへのアドレスを分割している？
 #define SETGATE(gate, istrap, sel, off, d)                \
 {                                                         \
   (gate).off_15_0 = (uint)(off) & 0xffff;                \

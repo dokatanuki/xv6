@@ -17,7 +17,7 @@
 // そして関数の終わりで，movl ebp espでespの復元，pop ebpでebpの値を復元
 // これはebpの値を保持できることに加え，espの値がreturn addressを指すため，ローカル変数を消去する役割も担っている
 // espはreturn addressを指しているため，retで戻れる
-// 引数の分だけstackをあげる必要があるが，タイミングは呼び出し規則に依存する
+// 引数の分だけstackをあげる必要があるがタイミングは呼び出し規則に依存する
 // ここではcontextにてebpを保存するため，ebpをスタックに積む操作は行われていない
 // espはreturn addressを指していて，引数へのアクセスは4byte上から始まる
 // [x86アセンブリ言語での関数コール](https://vanya.jp.net/os/x86call/ "x86アセンブリ言語での関数コール")

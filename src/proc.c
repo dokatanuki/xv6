@@ -428,7 +428,6 @@ yield(void)
 
 // A fork child's very first scheduling by scheduler()
 // will swtch here.  "Return" to user space.
-// TBC: 
 void
 forkret(void)
 {

@@ -9,12 +9,20 @@
 # exec(init, argv)
 .globl start
 start:
+  // システムコールの引数をユーザスタックに積む
   pushl $argv
   pushl $init
   // 戻り番地をゼロに指定する
+  // eip
   pushl $0  // where caller pc would be
   // システムコールの番号をeaxに積む
+  // カーネルモードに遷移
   movl $SYS_exec, %eax
+
+  // TBC: 引数をスタックに積んでない？
+  // 内部でよしなにやってる？
+  // 戻り番地は？
+  // int n: nはtrapnoであり，割り込みの種類
   int $T_SYSCALL
 
 # for(;;) exit();

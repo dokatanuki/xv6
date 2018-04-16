@@ -4,6 +4,7 @@
   # レジスタの値を保持する
 .globl alltraps
 alltraps:
+  # int命令で積んでいないユーザのレジスタをすべて積む
   # Build trap frame.
   pushl %ds
   pushl %es
@@ -21,7 +22,8 @@ alltraps:
   # Call trap(tf), where tf=%esp
   # 引数を積む
   pushl %esp
-  # 返り値を積む
+  # 返り値を積んでtrapに飛ぶ
+  # trapでは状況に応じてユーザスタックに積まれた引数を見て，対応する割り込みハンドラを実行する 
   call trap
   # 引数の破棄
   addl $4, %esp

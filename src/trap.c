@@ -20,11 +20,11 @@ tvinit(void)
 {
   int i;
 
-
   // SETGATE(gate, istrap, sel, off, d)
+  // すべてカーネルモードで実行されるように，csの下位3bitには0を指定する
   for(i = 0; i < 256; i++)
     SETGATE(idt[i], 0, SEG_KCODE<<3, vectors[i], 0);
-  // T_SYSCALL
+  // システムコールだけはユーザ空間から実行できるように設定
   SETGATE(idt[T_SYSCALL], 1, SEG_KCODE<<3, vectors[T_SYSCALL], DPL_USER);
 
   initlock(&tickslock, "time");
@@ -40,6 +40,7 @@ idtinit(void)
 void
 trap(struct trapframe *tf)
 {
+  // trapnoがシステムコールだった場合
   if(tf->trapno == T_SYSCALL){
     if(myproc()->killed)
       exit();

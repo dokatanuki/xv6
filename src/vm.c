@@ -182,6 +182,10 @@ switchkvm(void)
 
 // Switch TSS and h/w page table to correspond to process p.
 // pgdirを更新
+// ページテーブルを切り替える
+// 切り替え先のプロセスで割り込みが起こっても大丈夫なように，mycpuのtask segment(ts)にssとespをセットしておく
+// ユーザモードのときに割り込みが起きたらカーネルモードに遷移しなくてはいけない．
+// カーネルスタックに切り替えて，そこにユーザ空間のレジスタ等を保持する(trapframe)
 void
 switchuvm(struct proc *p)
 {
@@ -202,6 +206,7 @@ switchuvm(struct proc *p)
   mycpu()->ts.esp0 = (uint)p->kstack + KSTACKSIZE;
   // setting IOPL=0 in eflags *and* iomb beyond the tss segment limit
   // forbids I/O instructions (e.g., inb and outb) from user space
+  // iomb: I/O Mapped Base
   mycpu()->ts.iomb = (ushort) 0xFFFF;
   ltr(SEG_TSS << 3);
   // 同じプロセスなのに再度cr3にpgdirをセットする理由は、

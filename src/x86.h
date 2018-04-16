@@ -169,7 +169,8 @@ struct trapframe {
   ushort padding3;
   ushort ds;
   ushort padding4;
-  // TBC: なんの番号？
+  // なぜ割り込みが入ったかを特定する
+  // IDTのエントリ？
   uint trapno;
 
   // below here defined by x86 hardware
