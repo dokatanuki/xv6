@@ -81,7 +81,7 @@ xv6にはMMIOを介して外部ユニットをセットアップするコード�
 > [Motherboard-wiki](https://en.wikipedia.org/wiki/Motherboard "Motherboard")より引用  
 
 ![Motherboard for an Acer desktop](./img/1575px-Acer_E360_Socket_939_motherboard_by_Foxconn.png "Motherboard for an Acer desktop")
-> [Motherboard for an Acer desktop](./img/1575px-Acer_E360_Socket_939_motherboard_by_Foxconn.png "Motherboard for an Acer desktop")より引用
+> Motherboard for an Acer desktop
 
 #### `Local APIC, I/O APIC [APIC: Advanced Programmable Interrupt Controller]`
 xv6はマルチプロセッサに対応している．  
