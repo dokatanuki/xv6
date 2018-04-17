@@ -1,7 +1,8 @@
 # xv6 sources with comments
 
 ### Overview
-xv6のコード・リーディングを行い、プログラムにコメントとして記したもの。
+xv6のコード・リーディングを行い，プログラムにコメントとして記したもの．  
+コードで追いきれない前提知識や，xv6のシミュレーション方法は以下に示す．  
 
 ---
 
@@ -107,7 +108,7 @@ USBやBIOS, interrupt controller(e.g. I/O APIC)とCPUのインタフェースを
 Northbridgeのと接続はPCI Busが一般的な模様．  
 
 #### `Flash ROM`
-Non-Volatile memmory(不揮発性メモリ)であり，BIOS(Basic Input/Output System)が格納されている．  
+Non-Volatile memory(不揮発性メモリ)であり，BIOS(Basic Input/Output System)が格納されている．  
 
 ---
 
