@@ -1,11 +1,11 @@
 # xv6 sources with comments
 
-## Overview
+### Overview
 xv6のコード・リーディングを行い、プログラムにコメントとして記したもの。
 
 ---
 
-## int instruction
+### int instruction
 int命令の挙動は明示的にコードに示されているわけではないため，補足として示しておく．  
 
 ### `Assume: "int n" instruction is invoked from user program`
@@ -71,23 +71,52 @@ int命令でカーネルスタックに積んだユーザのレジスタを復�
 
 ---
 
-## Architecture
+### Architecture
+xv6にはMMIOを介して外部ユニットをセットアップするコードが見られる．  
+そこでMotherboardを取り上げ，ハードウェアの構成の概要を把握する．  
+
 ### `Modern Motherboard`
 ![Motherboard](./img/Motherboard_diagram.png "Motherboard")
-> [Motherboard-wiki](https://en.wikipedia.org/wiki/Motherboard "Motherboard")より引用(一部改変)  
+> [Motherboard-wiki](https://en.wikipedia.org/wiki/Motherboard "Motherboard")より引用  
+
+![Motherboard for an Acer desktop](./img/1575px-Acer_E360_Socket_939_motherboard_by_Foxconn.png "Motherboard for an Acer desktop")
+> [Motherboard for an Acer desktop](./img/1575px-Acer_E360_Socket_939_motherboard_by_Foxconn.png "Motherboard for an Acer desktop")より引用
+
+#### `Local APIC, I/O APIC [APIC: Advanced Programmable Interrupt Controller]`
+xv6はマルチプロセッサに対応している．  
+複数のCPUがSystem Bus(CPUとChipsetを繋ぐバス)を介してチップと繋がっている．  
+CPUにはSystem callや, I/O, IPIによる割り込みを処理するLocal APICというユニットが内臓されている．  
+<br>
+I/O割り込みはI/O APICと呼ばれるChipset上のユニット(おそらくSouthbridgeあたりに存在)を介してLAPICに通知が送られる．  
+IOAPICにはプログラム可能なIRQが用意されていて，MMIOによってプログラムからセットアップができる.  
+
+#### `Chipset`
+外部ユニットとCPUのインタフェースを提供する．  
+Chipsetの構成がいわゆる拡張の幅を決める．	e.g. メモリスロットの数  
 
 #### `Northbridge`
+FSB(Front Side Bus)を介してCPUと直に接続されている．  
+FSBは高効率であることが要求される．  
+メインメモリやGPU, Southbridge(I/Oデバイスなど)とCPUのインタフェースを提供する．  
+(TBC: CPUのクロック数の向上により，ChipsetとCPUの通信がボトルネックになり，Northbridge, Southbridgeの機能はCPUに実装され始めている模様->SoC: System on a Chip)  
+複数の種類のCPUを接続できる．  
+RAMは一つの規格のみ．	e.g. DDR4(下位互換があるためDDR3等は使用可能)  
 
 #### `Southbridge`
+USBやBIOS, interrupt controller(e.g. I/O APIC)とCPUのインタフェースを提供する．  
+Northbridgeのと接続はPCI Busが一般的な模様．  
+
+#### `Flash ROM`
+Non-Volatile memmory(不揮発性メモリ)であり，BIOS(Basic Input/Output System)が格納されている．  
 
 ---
 
-## [Emulate xv6 in VM](./emu/ "Emulate xv6 in VM")
+### [Emulate xv6 in VM](./emu/ "Emulate xv6 in VM")
 xv6をエミュレートする環境を構築する方法およびシェルスクリプトは[./emu/](./emu/ "./emu/")にまとめてある．  
 
 ---
 
-## Copyright
+### Copyright
 The xv6 software is:
 
 Copyright (c) 2006-2017 Frans Kaashoek, Robert Morris, Russ Cox,
@@ -114,8 +143,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ---
 
-## Reference
+### Reference
 [Text:book-rev10.pdf](https://pdos.csail.mit.edu/6.828/2017/xv6/book-rev10.pdf "book-rev10.pdf")  
 [Code:xv6-rev10.pdf](https://pdos.csail.mit.edu/6.828/2017/xv6/xv6-rev10.pdf "xv6-rev10.pdf")  
 [intel ia-32 manual](https://software.intel.com/en-us/articles/intel-sdm "intel ia-32 manual")  
-[割り込みとIDTと](http://softwaretechnique.jp/OS_Development/kernel_development02.html "")
+[割り込みとIDTとGDT](http://softwaretechnique.jp/OS_Development/kernel_development02.html "割り込みとIDTとGDT")
