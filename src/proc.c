@@ -352,6 +352,8 @@ scheduler(void)
   
   for(;;){
     // Enable interrupts on this processor.
+	// 初期化の間cli()で割り込みが無効化されている
+	// 割り込みを有効化する(割り込みを受け取るようになる)
     sti();
 
     // Loop over process table looking for process to run.

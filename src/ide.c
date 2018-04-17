@@ -40,6 +40,7 @@ idewait(int checkerr)
 {
   int r;
 
+  // I/Oportの0x1f7にはdiskの状態が格納されている
   while(((r = inb(0x1f7)) & (IDE_BSY|IDE_DRDY)) != IDE_DRDY)
     ;
   if(checkerr && (r & (IDE_DF|IDE_ERR)) != 0)
@@ -47,17 +48,23 @@ idewait(int checkerr)
   return 0;
 }
 
+// IDE: Integrated Device Electronics
+// I/Oインタフェース
+// バスの規格
 void
 ideinit(void)
 {
   int i;
 
   initlock(&idelock, "ide");
+  // ioapicからIRQ_IDEを最後のCPUのLAPICに対して通知できるように初期化
   ioapicenable(IRQ_IDE, ncpu - 1);
+  // Motherboardのポートを見て，ディスクが有効になるまで待機する
   idewait(0);
 
   // Check if disk 1 is present
   outb(0x1f6, 0xe0 | (1<<4));
+  // busyループもどき
   for(i=0; i<1000; i++){
     if(inb(0x1f7) != 0){
       havedisk1 = 1;
@@ -92,7 +99,11 @@ idestart(struct buf *b)
   outb(0x1f5, (sector >> 16) & 0xff);
   outb(0x1f6, 0xe0 | ((b->dev&1)<<4) | ((sector>>24)&0x0f));
   if(b->flags & B_DIRTY){
+	// 書き込み
     outb(0x1f7, write_cmd);
+	// TBC: 何をしている?
+	// bufの中のデータの1/4をどこかに渡している
+	// write命令を行うことをportにセットし，書き込みデータを指定の場所に送っている？
     outsl(0x1f0, b->data, BSIZE/4);
   } else {
     outb(0x1f7, read_cmd);
@@ -100,6 +111,7 @@ idestart(struct buf *b)
 }
 
 // Interrupt handler.
+// ideのqueueを進め，該当のbufを待ってsleepしているプロセスを起こす
 void
 ideintr(void)
 {
@@ -154,6 +166,7 @@ iderw(struct buf *b)
     ;
   *pp = b;
 
+  // 対象のバッファがリストの先頭であった場合，idestartを送る必要がある
   // Start disk if necessary.
   if(idequeue == b)
     idestart(b);

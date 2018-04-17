@@ -1,5 +1,7 @@
 // Routines to let C code use special x86 instructions.
 
+// Portの読み出し
+// e.g. MotherboardのI/O port 0x1f7を読み出す
 static inline uchar
 inb(ushort port)
 {
@@ -78,10 +80,12 @@ lidt(struct gatedesc *p, int size)
 {
   volatile ushort pd[3];
 
+  // pはidtへのポインタで仮想アドレス
   pd[0] = size-1;
   pd[1] = (uint)p;
   pd[2] = (uint)p >> 16;
 
+  // TBC: CPUのidtレジスタにidtへのポインタとサイズを格納しておく？
   asm volatile("lidt (%0)" : : "r" (pd));
 }
 

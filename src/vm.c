@@ -196,6 +196,7 @@ switchuvm(struct proc *p)
   if(p->pgdir == 0)
     panic("switchuvm: no pgdir");
 
+  // popcli()を実行されるまで割り込みされない
   pushcli();
   mycpu()->gdt[SEG_TSS] = SEG16(STS_T32A, &mycpu()->ts,
                                 sizeof(mycpu()->ts)-1, 0);
@@ -213,6 +214,7 @@ switchuvm(struct proc *p)
   // TLBのキャッシュを更新するため(ページの拡張、縮小による変化をTLBに伝達)
   // 仮にcr3に再セットしない場合、拡張されたページの以前のパーミッションがTLBに残っていて、そのページにアクセスできないなどが起こりうる
   lcr3(V2P(p->pgdir));  // switch to process's address space
+  // 一連の操作が完了したため，割り込みを受け取るようにcliをセットする
   popcli();
 }
 

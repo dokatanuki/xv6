@@ -41,9 +41,12 @@
 #define TCCR    (0x0390/4)   // Timer Current Count
 #define TDCR    (0x03E0/4)   // Timer Divide Configuration
 
+// LAPIC: Local Advanced Programmable Interrupt Controller
+// 外部からの割り込みに加え, I/O処理やマルチプロセッサのCPU間通信(IPI: Inter-Processor Interrupt)も処理する
 volatile uint *lapic;  // Initialized in mp.c
 
 //PAGEBREAK!
+// TBC: LAPIC WRITE? indexに対応したものにvalueを割り当てる
 static void
 lapicw(int index, int value)
 {
@@ -65,6 +68,8 @@ lapicinit(void)
   // If xv6 cared more about precise timekeeping,
   // TICR would be calibrated using an external time source.
   lapicw(TDCR, X1);
+  // TBC: 意味がよくわからない
+  // LAPICに対して，T_IRQ0に対してTIMER割り込みを周期的に発生させるように指定
   lapicw(TIMER, PERIODIC | (T_IRQ0 + IRQ_TIMER));
   lapicw(TICR, 10000000);
 
@@ -94,6 +99,8 @@ lapicinit(void)
     ;
 
   // Enable interrupts on the APIC (but not on the processor).
+  // TPR: Task Priority Register
+  // processorに割り込みを通知できるようになる
   lapicw(TPR, 0);
 }
 

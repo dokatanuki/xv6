@@ -3,11 +3,13 @@
 ## Overview
 xv6のコード・リーディングを行い、プログラムにコメントとして記したもの。
 
+---
+
 ## int instruction
 int命令の挙動は明示的にコードに示されているわけではないため，補足として示しておく．  
 
-### Assume: "int n" instruction is invoked from user program
-1. read num n entry of IDT
+### `Assume: "int n" instruction is invoked from user program`
+1. read num n entry of IDT  
 idtはgatedescのテーブル  
 ```c
 // Gate descriptors for interrupts and traps
@@ -24,53 +26,66 @@ struct gatedesc {
 };
 ```
 
-2. check CPL <= DPL
+2. check CPL <= DPL  
 CPLは%csの下位3bitに格納されており，それをgatedescのdplと比較する．  
 
-3. save %esp and %ss in CPU-internal registers
+3. save %esp and %ss in CPU-internal registers  
 このステップはユーザモードからカーネルモードへの遷移が起こるときのみ実行される．  
 (元々カーネルモードの場合は割り込み終了後もesp, ssを変更する必要はないため)  
 %esp: ユーザスタックの位置  
 %ss: 現在の実行特権レベルとどの領域が使用されているかを示す定数が格納されている  
 
-4. load %ss and %esp from a task segment descriptor
+4. load %ss and %esp from a task segment descriptor  
 task segment descriptorはcpu構造体の中に格納されている．  
 espには現在cpuが実行しているprocのkstackを指定している．  
 setupuvmにおいてページテーブルをセットする際にcpuの中に格納される．  
 ここからはユーザスタックではなく，カーネルスタックが利用される．  
 
-5. Push %ss, %esp
+5. Push %ss, %esp  
 ステップ3が実行された場合のみ実行される．  
 おそらくCPUの内部レジスタに格納されているユーザのss, espがPushされている．  
 
-6. Push %eflags, %cs, %eip
+6. Push %eflags, %cs, %eip  
 ユーザのeflags, cs, eipをカーネルスタックに積む．  
 int命令がカーネルスタックに積むレジスタはこれらのみ．  
 汎用レジスタ等の他のレジスタはvectorの冒頭でerror code, trapnoを積んだのちに，alltrapによって積まれる．  
 
-7. clear the IF bit in %eflags only if an interrupt
+7. clear the IF bit in %eflags only if an interrupt  
 ステップ1で読みだしたgatedescにおけるtypeを参照し，interruptであった場合はIFを0にして割り込みを禁止する．  
 
-8. set %cs, %eip to the value in the gate descriptor
+8. set %cs, %eip to the value in the gate descriptor  
 ステップ1で読みだしたgatedescにおけるcs, およびeip(off\_15\_0, off\_31\_16)をセットする．  
 これで特権レベルがカーネルモードに切り替わり，対応するハンドラの実行に移る．  
 
 
-### Assume: "iret" instruction is invoked from interrupt handler
+### `Assume: "iret" instruction is invoked from interrupt handler`
 vector(割り込みハンドラ)の中で汎用レジスタ等のレジスタは復元済み(trapret)であり，error code, trapnoはスタックポインタを8byteだけ上にあげることで破棄されている．  
 この命令が呼び出された段階で，espはカーネルスタックのeipが積まれたところを指している．(int命令でスタックに積んだ部分)  
 
-1. Pop %eip, %cs, %eflags
+1. Pop %eip, %cs, %eflags  
 int命令でカーネルスタックに積んだユーザのレジスタを復元する．  
 
-2. Pop %esp, ss
+2. Pop %esp, ss  
 ユーザ空間に戻る必要があるときのみ実行される.  
 スタックをユーザスタックに戻し，スタックに積んであったユーザのeip(int命令の次の命令の番地)から実行を再開する  
 
+---
+
+## Architecture
+### `Modern Motherboard`
+![Motherboard](./img/Motherboard_diagram.png "Motherboard")
+> [Motherboard-wiki](https://en.wikipedia.org/wiki/Motherboard "Motherboard")より引用(一部改変)  
+
+#### `Northbridge`
+
+#### `Southbridge`
+
+---
 
 ## [Emulate xv6 in VM](./emu/ "Emulate xv6 in VM")
 xv6をエミュレートする環境を構築する方法およびシェルスクリプトは[./emu/](./emu/ "./emu/")にまとめてある．  
 
+---
 
 ## Copyright
 The xv6 software is:
@@ -97,8 +112,10 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+---
 
 ## Reference
 [Text:book-rev10.pdf](https://pdos.csail.mit.edu/6.828/2017/xv6/book-rev10.pdf "book-rev10.pdf")  
 [Code:xv6-rev10.pdf](https://pdos.csail.mit.edu/6.828/2017/xv6/xv6-rev10.pdf "xv6-rev10.pdf")  
-[intel ia-32 manual](https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf "intel ia-32 manual")  
+[intel ia-32 manual](https://software.intel.com/en-us/articles/intel-sdm "intel ia-32 manual")  
+[割り込みとIDTと](http://softwaretechnique.jp/OS_Development/kernel_development02.html "")

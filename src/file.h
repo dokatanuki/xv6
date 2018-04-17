@@ -27,6 +27,9 @@ struct inode {
 
 // table mapping major device number to
 // device functions
+// デバイスのリストで，デバイスはinodeとして開かれている
+// それぞれのデバイスに対するread, writeの挙動をセットしてやる
+// e.g. mainn関数のconsoleinit
 struct devsw {
   int (*read)(struct inode*, char*, int);
   int (*write)(struct inode*, char*, int);

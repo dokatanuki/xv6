@@ -25,6 +25,7 @@
 volatile struct ioapic *ioapic;
 
 // IO APIC MMIO structure: write reg, then read or write data.
+// I/O APIC: I/O割り込みを受付け，リダイレクトテーブルを参照してLAPICに通知する
 struct ioapic {
   uint reg;
   uint pad[3];
@@ -50,6 +51,7 @@ ioapicinit(void)
 {
   int i, id, maxintr;
 
+  // MMIOによって仮想アドレスにマッピングされたIOAPICのアドレスをioapicにセットする
   ioapic = (volatile struct ioapic*)IOAPIC;
   maxintr = (ioapicread(REG_VER) >> 16) & 0xFF;
   id = ioapicread(REG_ID) >> 24;
@@ -58,12 +60,20 @@ ioapicinit(void)
 
   // Mark all interrupts edge-triggered, active high, disabled,
   // and not routed to any CPUs.
+  // 全てのIRQをDISABLEDにセットする
+  // CPUは割り当てない
+  // T_IRQ0: 
+  // RED_TABLE: リダイレクトテーブルのベースアドレス
+  // RED_TABLE+2*i: i番目のリダイレクトエントリ
   for(i = 0; i <= maxintr; i++){
     ioapicwrite(REG_TABLE+2*i, INT_DISABLED | (T_IRQ0 + i));
+	// CPUの指定は行わない
     ioapicwrite(REG_TABLE+2*i+1, 0);
   }
 }
 
+// IOAPICのIRQ(どの割り込みかを指定)に対して，cpuのlapicの番号を割り当てる
+// IOAPICに用意されている割り込みを指定し，それに対してcpuを割り当てる
 void
 ioapicenable(int irq, int cpunum)
 {

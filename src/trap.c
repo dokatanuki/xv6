@@ -9,6 +9,7 @@
 #include "spinlock.h"
 
 // Interrupt descriptor table (shared by all CPUs).
+// idtはidtinit関数のlidtでCPUにアドレスとサイズが格納される
 struct gatedesc idt[256];
 extern uint vectors[];  // in vectors.S: array of 256 entry pointers
 struct spinlock tickslock;
@@ -30,6 +31,7 @@ tvinit(void)
   initlock(&tickslock, "time");
 }
 
+// 割り込みベクタの初期化
 void
 idtinit(void)
 {
@@ -52,6 +54,7 @@ trap(struct trapframe *tf)
   }
 
   switch(tf->trapno){
+  // T_IRQ0でかつIRQ_TIMER
   case T_IRQ0 + IRQ_TIMER:
     if(cpuid() == 0){
       acquire(&tickslock);
@@ -61,6 +64,7 @@ trap(struct trapframe *tf)
     }
     lapiceoi();
     break;
+  // diskからの割り込み通知
   case T_IRQ0 + IRQ_IDE:
     ideintr();
     lapiceoi();

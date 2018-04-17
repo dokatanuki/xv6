@@ -88,6 +88,7 @@ mpconfig(struct mp **pmp)
   return conf;
 }
 
+// main関数でカーネルのページテーブルをセットした段階ではじめに呼び出される
 void
 mpinit(void)
 {
@@ -99,6 +100,9 @@ mpinit(void)
   struct mpioapic *ioapic;
 
   if((conf = mpconfig(&mp)) == 0)
+	// SMP: Symmetric Multi Processing
+	// 複数のCPUで同じ一つのメモリ空間を使用し、それぞれ情報を共有できるように設計されている。
+	// これによりSMPにおけるCPUはそれぞれ他のCPUと全く同様の処理を行うことが可能となり、処理能力や耐障害性などの向上を図ることができる
     panic("Expect to run on an SMP");
   ismp = 1;
   lapic = (uint*)conf->lapicaddr;

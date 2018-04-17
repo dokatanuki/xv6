@@ -285,6 +285,7 @@ consolewrite(struct inode *ip, char *buf, int n)
   return n;
 }
 
+// initialize device I/O APIC
 void
 consoleinit(void)
 {
@@ -294,6 +295,7 @@ consoleinit(void)
   devsw[CONSOLE].read = consoleread;
   cons.locking = 1;
 
+  // keyboardからのinterrupt(IRQ_KBD)をcpu0に割り当てる
   ioapicenable(IRQ_KBD, 0);
 }
 

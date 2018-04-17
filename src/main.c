@@ -23,18 +23,24 @@ main(void)
   // schedulerが利用するkpgdirを作成し、cr3にセットする
   kvmalloc();      // kernel page table
   // -----------↓ ここからcr3=kpgdir↓ -----------
+  // mp: multi processor
   mpinit();        // detect other processors
+  // LAPICの初期化，TBC: LAPICに内臓されているtimerの割り込みを処理できるようにセットアップして，TSSを有効化する？
   lapicinit();     // interrupt controller
   seginit();       // segment descriptors
   picinit();       // disable pic
+  // IOAPICのIRQに割り込みをセットする(CPUの割り当ては行わない)
   ioapicinit();    // another interrupt controller
+  // openされたコンソールのinodeに対応するdevice構造体に, read, writeの関数をセットする
+  // ioapicenableでIRQ_KBDをcpu0に割り当てる
   consoleinit();   // console hardware
   uartinit();      // serial port
   pinit();         // process table
-  //
+  // Interrupt Descriptor Table(IDT)にgatedescriptorをセットする
   tvinit();        // trap vectors
   binit();         // buffer cache
   fileinit();      // file table
+  // IDE接続のデバイス(Diskなど)のセットアップ(I/Oデバイスの割り込みを有効化)
   ideinit();       // disk 
   startothers();   // start other processors
   // 4MBからMMIO領域の手前(物理アドレスの限界)までをフリーリストにつなげる

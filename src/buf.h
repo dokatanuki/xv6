@@ -1,6 +1,11 @@
+// diskのブロックのデータ管理
+// TBC: ディスク内の実体とのデータの整合性をいかにして保つのか
 struct buf {
+  // データの状態を意味する(B_VALID, B_DIRTY)
   int flags;
+  // デバイス番号
   uint dev;
+  // セクター番号
   uint blockno;
   struct sleeplock lock;
   uint refcnt;
