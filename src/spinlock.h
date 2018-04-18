@@ -1,4 +1,5 @@
 // Mutual exclusion lock.
+// lock=0 -> どのプロセスも利用していないため，ロックを獲得できる
 struct spinlock {
   uint locked;       // Is the lock held?
 
