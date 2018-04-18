@@ -17,22 +17,22 @@ BIG	usertests.c	1452;"	d	file:
 BPB	fs.h	45;"	d
 BSIZE	fs.h	6;"	d
 BUSY	lapic.c	29;"	d	file:
-B_DIRTY	buf.h	13;"	d
-B_VALID	buf.h	12;"	d
+B_DIRTY	buf.h	18;"	d
+B_VALID	buf.h	17;"	d
 C	console.c	189;"	d	file:
 C	kbd.h	32;"	d
 CAPSLOCK	kbd.h	13;"	d
 CC	Makefile	/^CC = $(TOOLPREFIX)gcc$/;"	m
 CFLAGS	Makefile	/^CFLAGS = -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer$/;"	m
-CMOS_PORT	lapic.c	123;"	d	file:
-CMOS_RETURN	lapic.c	124;"	d	file:
-CMOS_STATA	lapic.c	163;"	d	file:
-CMOS_STATB	lapic.c	164;"	d	file:
-CMOS_UIP	lapic.c	165;"	d	file:
+CMOS_PORT	lapic.c	133;"	d	file:
+CMOS_RETURN	lapic.c	134;"	d	file:
+CMOS_STATA	lapic.c	173;"	d	file:
+CMOS_STATB	lapic.c	174;"	d	file:
+CMOS_UIP	lapic.c	175;"	d	file:
 COM1	uart.c	15;"	d	file:
-CONSOLE	file.h	37;"	d
-CONV	lapic.c	214;"	d	file:
-CONV	lapic.c	221;"	d	file:
+CONSOLE	file.h	40;"	d
+CONV	lapic.c	224;"	d	file:
+CONV	lapic.c	231;"	d	file:
 CPUS	Makefile	/^CPUS := 2$/;"	m
 CR0_AM	mmu.h	35;"	d
 CR0_CD	mmu.h	37;"	d
@@ -48,10 +48,10 @@ CR0_WP	mmu.h	34;"	d
 CR4_PSE	mmu.h	40;"	d
 CRTPORT	console.c	128;"	d	file:
 CTL	kbd.h	10;"	d
-DAY	lapic.c	170;"	d	file:
+DAY	lapic.c	180;"	d	file:
 DEASSERT	lapic.c	26;"	d	file:
 DELIVS	lapic.c	24;"	d	file:
-DEVSPACE	memlayout.h	5;"	d
+DEVSPACE	memlayout.h	6;"	d
 DIRSIZ	fs.h	51;"	d
 DPL_USER	mmu.h	81;"	d
 E0ESC	kbd.h	17;"	d
@@ -96,7 +96,7 @@ FL_VM	mmu.h	21;"	d
 FL_ZF	mmu.h	8;"	d
 FSSIZE	param.h	13;"	d
 GDBPORT	Makefile	/^GDBPORT = $(shell expr `id -u` % 5000 + 25000)$/;"	m
-HOURS	lapic.c	169;"	d	file:
+HOURS	lapic.c	179;"	d	file:
 Header	umalloc.c	/^typedef union header Header;$/;"	t	typeref:union:header	file:
 IBLOCK	fs.h	42;"	d
 ICRHI	lapic.c	31;"	d	file:
@@ -120,17 +120,17 @@ IOAPIC	ioapic.c	9;"	d	file:
 IO_PIC1	picirq.c	6;"	d	file:
 IO_PIC2	picirq.c	7;"	d	file:
 IPB	fs.h	39;"	d
-IRQ_COM1	traps.h	34;"	d
-IRQ_ERROR	traps.h	36;"	d
-IRQ_IDE	traps.h	35;"	d
-IRQ_KBD	traps.h	33;"	d
-IRQ_SPURIOUS	traps.h	37;"	d
-IRQ_TIMER	traps.h	32;"	d
+IRQ_COM1	traps.h	37;"	d
+IRQ_ERROR	traps.h	39;"	d
+IRQ_IDE	traps.h	38;"	d
+IRQ_KBD	traps.h	36;"	d
+IRQ_SPURIOUS	traps.h	40;"	d
+IRQ_TIMER	traps.h	35;"	d
 KBDATAP	kbd.h	5;"	d
 KBSTATP	kbd.h	3;"	d
 KBS_DIB	kbd.h	4;"	d
-KERNBASE	memlayout.h	8;"	d
-KERNLINK	memlayout.h	9;"	d
+KERNBASE	memlayout.h	10;"	d
+KERNLINK	memlayout.h	13;"	d
 KEY_DEL	kbd.h	29;"	d
 KEY_DN	kbd.h	23;"	d
 KEY_END	kbd.h	21;"	d
@@ -154,8 +154,8 @@ MAXARGS	sh.c	14;"	d	file:
 MAXFILE	fs.h	26;"	d
 MAXOPBLOCKS	param.h	10;"	d
 MEMFSOBJS	Makefile	/^MEMFSOBJS = $(filter-out ide.o,$(OBJS)) memide.o$/;"	m
-MINS	lapic.c	168;"	d	file:
-MONTH	lapic.c	171;"	d	file:
+MINS	lapic.c	178;"	d	file:
+MONTH	lapic.c	181;"	d	file:
 MPBOOT	mp.h	34;"	d
 MPBUS	mp.h	50;"	d
 MPIOAPIC	mp.h	51;"	d
@@ -174,9 +174,9 @@ NINODE	param.h	6;"	d
 NINODES	mkfs.c	18;"	d	file:
 NO	kbd.h	7;"	d
 NOFILE	param.h	4;"	d
-NPDENTRIES	mmu.h	123;"	d
+NPDENTRIES	mmu.h	124;"	d
 NPROC	param.h	1;"	d
-NPTENTRIES	mmu.h	124;"	d
+NPTENTRIES	mmu.h	125;"	d
 NSEGS	mmu.h	50;"	d
 NUMLOCK	kbd.h	14;"	d
 OBJCOPY	Makefile	/^OBJCOPY = $(TOOLPREFIX)objcopy$/;"	m
@@ -186,34 +186,34 @@ O_CREATE	fcntl.h	4;"	d
 O_RDONLY	fcntl.h	1;"	d
 O_RDWR	fcntl.h	3;"	d
 O_WRONLY	fcntl.h	2;"	d
-P2V	memlayout.h	12;"	d
-P2V_WO	memlayout.h	15;"	d
+P2V	memlayout.h	18;"	d
+P2V_WO	memlayout.h	21;"	d
 PCINT	lapic.c	35;"	d	file:
 PDX	mmu.h	114;"	d
-PDXSHIFT	mmu.h	129;"	d
+PDXSHIFT	mmu.h	130;"	d
 PERIODIC	lapic.c	34;"	d	file:
 PGADDR	mmu.h	120;"	d
-PGROUNDDOWN	mmu.h	132;"	d
-PGROUNDUP	mmu.h	131;"	d
-PGSHIFT	mmu.h	127;"	d
-PGSIZE	mmu.h	125;"	d
+PGROUNDDOWN	mmu.h	133;"	d
+PGROUNDUP	mmu.h	132;"	d
+PGSHIFT	mmu.h	128;"	d
+PGSIZE	mmu.h	126;"	d
 PHYSTOP	memlayout.h	4;"	d
 PIPE	sh.c	10;"	d	file:
 PIPESIZE	pipe.c	11;"	d	file:
 PRINT	Makefile	/^PRINT = runoff.list runoff.spec README toc.hdr toc.ftr $(FILES)$/;"	m
-PTE_A	mmu.h	140;"	d
-PTE_ADDR	mmu.h	146;"	d
-PTE_D	mmu.h	141;"	d
-PTE_FLAGS	mmu.h	147;"	d
-PTE_MBZ	mmu.h	143;"	d
-PTE_P	mmu.h	135;"	d
-PTE_PCD	mmu.h	139;"	d
-PTE_PS	mmu.h	142;"	d
-PTE_PWT	mmu.h	138;"	d
-PTE_U	mmu.h	137;"	d
-PTE_W	mmu.h	136;"	d
+PTE_A	mmu.h	141;"	d
+PTE_ADDR	mmu.h	148;"	d
+PTE_D	mmu.h	142;"	d
+PTE_FLAGS	mmu.h	149;"	d
+PTE_MBZ	mmu.h	144;"	d
+PTE_P	mmu.h	136;"	d
+PTE_PCD	mmu.h	140;"	d
+PTE_PS	mmu.h	143;"	d
+PTE_PWT	mmu.h	139;"	d
+PTE_U	mmu.h	138;"	d
+PTE_W	mmu.h	137;"	d
 PTX	mmu.h	117;"	d
-PTXSHIFT	mmu.h	128;"	d
+PTXSHIFT	mmu.h	129;"	d
 QEMU	Makefile	/^QEMU = $(shell if which qemu > \/dev\/null; \\$/;"	m
 QEMUGDB	Makefile	/^QEMUGDB = $(shell if $(QEMU) -help | grep -q '^-gdb'; \\$/;"	m
 QEMUOPTS	Makefile	/^QEMUOPTS = -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp $(CPUS) -m 512 $(QEMUEXTRA)$/;"	m
@@ -228,7 +228,7 @@ RTC_DATA	usertests.c	1702;"	d	file:
 RUNNABLE	proc.h	/^enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };$/;"	e	enum:procstate
 RUNNING	proc.h	/^enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };$/;"	e	enum:procstate
 SCROLLLOCK	kbd.h	15;"	d
-SECS	lapic.c	167;"	d	file:
+SECS	lapic.c	177;"	d	file:
 SECTOR_SIZE	ide.c	16;"	d	file:
 SECTSIZE	bootmain.c	13;"	d	file:
 SEG	mmu.h	71;"	d
@@ -240,7 +240,7 @@ SEG_NULLASM	asm.h	5;"	d
 SEG_TSS	mmu.h	47;"	d
 SEG_UCODE	mmu.h	45;"	d
 SEG_UDATA	mmu.h	46;"	d
-SETGATE	mmu.h	215;"	d
+SETGATE	mmu.h	221;"	d
 SHIFT	kbd.h	9;"	d
 SLEEPING	proc.h	/^enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };$/;"	e	enum:procstate
 STARTUP	lapic.c	23;"	d	file:
@@ -297,38 +297,38 @@ TICR	lapic.c	40;"	d	file:
 TIMER	lapic.c	32;"	d	file:
 TOOLPREFIX	Makefile	/^TOOLPREFIX := $(shell if i386-jos-elf-objdump -i 2>&1 | grep '^elf32-i386$$' >\/dev\/null 2>&1; \\$/;"	m
 TPR	lapic.c	16;"	d	file:
-T_ALIGN	traps.h	21;"	d
-T_BOUND	traps.h	9;"	d
-T_BRKPT	traps.h	7;"	d
-T_DBLFLT	traps.h	12;"	d
-T_DEBUG	traps.h	5;"	d
-T_DEFAULT	traps.h	28;"	d
+T_ALIGN	traps.h	22;"	d
+T_BOUND	traps.h	10;"	d
+T_BRKPT	traps.h	8;"	d
+T_DBLFLT	traps.h	13;"	d
+T_DEBUG	traps.h	6;"	d
+T_DEFAULT	traps.h	29;"	d
 T_DEV	stat.h	3;"	d
-T_DEVICE	traps.h	11;"	d
+T_DEVICE	traps.h	12;"	d
 T_DIR	stat.h	1;"	d
-T_DIVIDE	traps.h	4;"	d
+T_DIVIDE	traps.h	5;"	d
 T_FILE	stat.h	2;"	d
-T_FPERR	traps.h	20;"	d
-T_GPFLT	traps.h	17;"	d
-T_ILLOP	traps.h	10;"	d
-T_IRQ0	traps.h	30;"	d
-T_MCHK	traps.h	22;"	d
-T_NMI	traps.h	6;"	d
-T_OFLOW	traps.h	8;"	d
-T_PGFLT	traps.h	18;"	d
-T_SEGNP	traps.h	15;"	d
-T_SIMDERR	traps.h	23;"	d
-T_STACK	traps.h	16;"	d
-T_SYSCALL	traps.h	27;"	d
-T_TSS	traps.h	14;"	d
+T_FPERR	traps.h	21;"	d
+T_GPFLT	traps.h	18;"	d
+T_ILLOP	traps.h	11;"	d
+T_IRQ0	traps.h	33;"	d
+T_MCHK	traps.h	23;"	d
+T_NMI	traps.h	7;"	d
+T_OFLOW	traps.h	9;"	d
+T_PGFLT	traps.h	19;"	d
+T_SEGNP	traps.h	16;"	d
+T_SIMDERR	traps.h	24;"	d
+T_STACK	traps.h	17;"	d
+T_SYSCALL	traps.h	28;"	d
+T_TSS	traps.h	15;"	d
 ULIB	Makefile	/^ULIB = ulib.o usys.o printf.o umalloc.o$/;"	m
 UNUSED	proc.h	/^enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };$/;"	e	enum:procstate
 UPROGS	Makefile	/^UPROGS=\\$/;"	m
-V2P	memlayout.h	11;"	d
-V2P_WO	memlayout.h	14;"	d
+V2P	memlayout.h	15;"	d
+V2P_WO	memlayout.h	20;"	d
 VER	lapic.c	15;"	d	file:
 X1	lapic.c	33;"	d	file:
-YEAR	lapic.c	172;"	d	file:
+YEAR	lapic.c	182;"	d	file:
 ZOMBIE	proc.h	/^enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };$/;"	e	enum:procstate
 _start	entry.S	/^_start = V2P_WO(entry)$/;"	d
 acquire	spinlock.c	/^acquire(struct spinlock *lk)$/;"	f
@@ -425,7 +425,7 @@ createtest	usertests.c	/^createtest(void)$/;"	f
 crt	console.c	/^static ushort *crt = (ushort*)P2V(0xb8000);  \/\/ CGA memory$/;"	v	file:
 cs	mmu.h	/^  uint cs : 16;         \/\/ code segment selector$/;"	m	struct:gatedesc
 cs	mmu.h	/^  ushort cs;$/;"	m	struct:taskstate
-cs	x86.h	/^  ushort cs;$/;"	m	struct:trapframe
+cs	x86.h	/^  ushort cs; \/\/ 現在のプロセスの特権レベルを示す(CPL)$/;"	m	struct:trapframe
 ctlmap	kbd.h	/^static uchar ctlmap[256] =$/;"	v
 cwd	proc.h	/^  struct inode *cwd;           \/\/ Current directory$/;"	m	struct:proc	typeref:struct:proc::inode
 data	buf.h	/^  uchar data[BSIZE];$/;"	m	struct:buf

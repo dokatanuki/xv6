@@ -121,12 +121,15 @@ sti(void)
   asm volatile("sti");
 }
 
+// atomicに命令を実行するためのx86の命令
 static inline uint
 xchg(volatile uint *addr, uint newval)
 {
   uint result;
 
   // The + in "+m" denotes a read-modify-write operand.
+  // 第一オペランドを第二オペランドと交換する
+  // TBC: =aで戻り値を取り出せる？
   asm volatile("lock; xchgl %0, %1" :
                "+m" (*addr), "=a" (result) :
                "1" (newval) :

@@ -111,7 +111,9 @@ idestart(struct buf *b)
 }
 
 // Interrupt handler.
-// ideのqueueを進め，該当のbufを待ってsleepしているプロセスを起こす
+// ideからの割り込みがあった際に呼び出される
+// idequeueの先頭が処理されたことを意味し、先頭からbufを取り除き、
+// そのbufをchanとして待つプロセスをSLEEPINGからRUNNABLEに変える
 void
 ideintr(void)
 {
@@ -146,6 +148,8 @@ ideintr(void)
 // Sync buf with disk.
 // If B_DIRTY is set, write buf to disk, clear B_DIRTY, set B_VALID.
 // Else if B_VALID is not set, read buf from disk, set B_VALID.
+// 対象のバッファを処理する
+// リストの操作はクリティカルセクションであるため、ロックで保護する
 void
 iderw(struct buf *b)
 {
@@ -161,6 +165,7 @@ iderw(struct buf *b)
   acquire(&idelock);  //DOC:acquire-lock
 
   // Append b to idequeue.
+  // idequeueの末尾にバッファを追加
   b->qnext = 0;
   for(pp=&idequeue; *pp; pp=&(*pp)->qnext)  //DOC:insert-queue
     ;
@@ -169,10 +174,12 @@ iderw(struct buf *b)
   // 対象のバッファがリストの先頭であった場合，idestartを送る必要がある
   // Start disk if necessary.
   if(idequeue == b)
+	// diskの処理開始, 終わったら割り込みを入れてくる？
     idestart(b);
 
   // Wait for request to finish.
   while((b->flags & (B_VALID|B_DIRTY)) != B_VALID){
+	// TBC: 誰がwakeする？diskからbufの処理完了のwakeが来るまでスリープする
     sleep(b, &idelock);
   }
 

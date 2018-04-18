@@ -453,6 +453,9 @@ forkret(void)
 
 // Atomically release lock and sleep on chan.
 // Reacquires lock when awakened.
+// スリープするときにロックを解放し、再開するときに再び獲得する
+// chan: sleeplockのポインタ
+// lk  : spinlockのポインタ
 void
 sleep(void *chan, struct spinlock *lk)
 {
@@ -470,17 +473,27 @@ sleep(void *chan, struct spinlock *lk)
   // guaranteed that we won't miss any wakeup
   // (wakeup runs with ptable.lock locked),
   // so it's okay to release lk.
+  // TBC: File Systemでしか使われてないのにptable.lockが入ってくることはあるのか？
   if(lk != &ptable.lock){  //DOC: sleeplock0
     acquire(&ptable.lock);  //DOC: sleeplock1
+	// spinlockを一旦解放し、割り込みを有効化する
     release(lk);
   }
   // Go to sleep.
+  // pは現在実行中のプロセス
+  // スリープして待つsleeplock
+  // => TBC: wakeの際にp.tableからSLEEPINGなものを探して、chanを見て起こす
   p->chan = chan;
+  // スリープに入る
   p->state = SLEEPING;
 
+  // p.tableのロックを獲得している必要がある
   sched();
+  // wakeで起こされたらここから再開する
+  // schedulerでcontextは保持されているためここから再開できる
 
   // Tidy up.
+  // 後処理, 後片付け
   p->chan = 0;
 
   // Reacquire original lock.
@@ -493,6 +506,7 @@ sleep(void *chan, struct spinlock *lk)
 //PAGEBREAK!
 // Wake up all processes sleeping on chan.
 // The ptable lock must be held.
+// SLEEPINGしているプロセスをRUNNABLEにする
 static void
 wakeup1(void *chan)
 {
@@ -504,6 +518,7 @@ wakeup1(void *chan)
 }
 
 // Wake up all processes sleeping on chan.
+// chanを待ってSLEEPINGしてるプロセスをRUNNABLEにセットする
 void
 wakeup(void *chan)
 {

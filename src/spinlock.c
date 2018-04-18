@@ -22,20 +22,26 @@ initlock(struct spinlock *lk, char *name)
 // Holding a lock for a long time may cause
 // other CPUs to waste time spinning to acquire it.
 // スレッドセーフな関数ではない
+// lockを獲得してからreleaseで解放するまで割り込みされないようにpushcli()を呼び出す=>releaseの最後でpopcli()を呼び出す
 void
 acquire(struct spinlock *lk)
 {
   pushcli(); // disable interrupts to avoid deadlock.
+  // 自分自身がロックを獲得していたらおかしい
   if(holding(lk))
     panic("acquire");
 
   // The xchg is atomic.
+  // lockがすでに獲得されている場合のxchgの返り値は1
+  // つまり、lockが獲得できる状態になるまでビジーループ
   while(xchg(&lk->locked, 1) != 0)
     ;
 
   // Tell the C compiler and the processor to not move loads or stores
   // past this point, to ensure that the critical section's memory
   // references happen after the lock is acquired.
+  // コンパイラの最適化によるメモリアクセス命令の順序の変化を防ぐ
+  // buildin function
   __sync_synchronize();
 
   // Record info about lock acquisition for debugging.
@@ -44,12 +50,15 @@ acquire(struct spinlock *lk)
 }
 
 // Release the lock.
+// acquireでpushcli()を実行=>releaseの最後にpopcli()
 void
 release(struct spinlock *lk)
 {
+  // 自身がロックを獲得していないのに呼び出していたらおかしい
   if(!holding(lk))
     panic("release");
 
+  // デバッグ情報の初期化
   lk->pcs[0] = 0;
   lk->cpu = 0;
 
@@ -69,6 +78,7 @@ release(struct spinlock *lk)
 }
 
 // Record the current call stack in pcs[] by following the %ebp chain.
+// デバッグ用関数
 void
 getcallerpcs(void *v, uint pcs[])
 {
@@ -108,7 +118,9 @@ pushcli(void)
   cli();
   // pushしているため、ここは必ず0にはならない
   // マルチスレッドではもしかしたら0になる？
+  // pushするまえに割り込みが可能であったか？
   if(mycpu()->ncli == 0)
+	// TBC: push前に割り込み可能でない状態はどんな状況？
     mycpu()->intena = eflags & FL_IF;
   mycpu()->ncli += 1;
 }
@@ -120,6 +132,7 @@ popcli(void)
     panic("popcli - interruptible");
   if(--mycpu()->ncli < 0)
     panic("popcli");
+  // push前に割り込みが可能でなかった場合にはそのままにしておく
   if(mycpu()->ncli == 0 && mycpu()->intena)
     sti();
 }
