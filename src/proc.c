@@ -485,7 +485,7 @@ sleep(void *chan, struct spinlock *lk)
   // guaranteed that we won't miss any wakeup
   // (wakeup runs with ptable.lock locked),
   // so it's okay to release lk.
-  // TBC: File Systemでしか使われてないのにptable.lockが入ってくることはあるのか？
+  // waitの中でptable.lockを引数にsleepが呼び出される．
   if(lk != &ptable.lock){  //DOC: sleeplock0
     acquire(&ptable.lock);  //DOC: sleeplock1
 	// spinlockを一旦解放し、割り込みを有効化する
