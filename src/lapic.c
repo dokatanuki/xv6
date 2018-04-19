@@ -47,6 +47,7 @@ volatile uint *lapic;  // Initialized in mp.c
 
 //PAGEBREAK!
 // TBC: LAPIC WRITE? indexに対応したものにvalueを割り当てる
+// indexでレジスタを指定
 static void
 lapicw(int index, int value)
 {
@@ -54,6 +55,7 @@ lapicw(int index, int value)
   lapic[ID];  // wait for write to finish, by reading
 }
 
+// LAPICのLVT(Local Vector Table: LAPICで発生，またはIOAPICから送られてきた割り込みに対してどのような挙動をするか)をセットする
 void
 lapicinit(void)
 {
@@ -68,7 +70,6 @@ lapicinit(void)
   // If xv6 cared more about precise timekeeping,
   // TICR would be calibrated using an external time source.
   lapicw(TDCR, X1);
-  // TBC: 意味がよくわからない
   // LAPICに対して，T_IRQ0に対してTIMER割り込みを周期的に発生させるように指定
   lapicw(TIMER, PERIODIC | (T_IRQ0 + IRQ_TIMER));
   lapicw(TICR, 10000000);
@@ -116,11 +117,12 @@ lapicid(void)
 }
 
 // Acknowledge interrupt.
+// I/O APICに対して割り込みベクタの処理が完了したことを伝える
 void
 lapiceoi(void)
 {
   if(lapic)
-    lapicw(EOI, 0);
+   lapicw(EOI, 0);
 }
 
 // Spin for a given number of microseconds.

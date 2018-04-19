@@ -10,7 +10,7 @@
 
 #define REG_ID     0x00  // Register index: ID
 #define REG_VER    0x01  // Register index: version
-#define REG_TABLE  0x10  // Redirection table base
+#define REG_TABLE  0xb0  // Redirection table base
 
 // The redirection table starts at REG_TABLE and uses
 // two registers to configure each interrupt.
@@ -42,6 +42,7 @@ ioapicread(int reg)
 static void
 ioapicwrite(int reg, uint data)
 {
+  // 仕様書で定義されている番号を入れてやると，IOAPICが内部で対応するエントリにdataを代入してくれる
   ioapic->reg = reg;
   ioapic->data = data;
 }
@@ -53,7 +54,9 @@ ioapicinit(void)
 
   // MMIOによって仮想アドレスにマッピングされたIOAPICのアドレスをioapicにセットする
   ioapic = (volatile struct ioapic*)IOAPIC;
+  // IOAPICVERの[23:16]を取り出す
   maxintr = (ioapicread(REG_VER) >> 16) & 0xFF;
+  // IOAPICのuniqueなIDの取り出し
   id = ioapicread(REG_ID) >> 24;
   if(id != ioapicid)
     cprintf("ioapicinit: id isn't equal to ioapicid; not a MP\n");
@@ -66,6 +69,7 @@ ioapicinit(void)
   // RED_TABLE: リダイレクトテーブルのベースアドレス
   // RED_TABLE+2*i: i番目のリダイレクトエントリ
   for(i = 0; i <= maxintr; i++){
+	// リダイレクトテーブルのエントリ()
     ioapicwrite(REG_TABLE+2*i, INT_DISABLED | (T_IRQ0 + i));
 	// CPUの指定は行わない
     ioapicwrite(REG_TABLE+2*i+1, 0);

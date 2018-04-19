@@ -28,8 +28,7 @@
 #define T_SYSCALL       64      // system call
 #define T_DEFAULT      500      // catchall
 
-// TBC: LAIPCの中で起こるtimerの割り込み番号？
-// APICへの割り込み伝達で使われる？
+// ハードウェアの割り込みのベース
 #define T_IRQ0          32      // IRQ 0 corresponds to int T_IRQ
 
 #define IRQ_TIMER        0

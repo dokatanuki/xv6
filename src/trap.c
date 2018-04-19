@@ -10,6 +10,7 @@
 
 // Interrupt descriptor table (shared by all CPUs).
 // idtはidtinit関数のlidtでCPUにアドレスとサイズが格納される
+// idtはCPU内部のレジスタ
 struct gatedesc idt[256];
 extern uint vectors[];  // in vectors.S: array of 256 entry pointers
 struct spinlock tickslock;
@@ -62,6 +63,7 @@ trap(struct trapframe *tf)
       wakeup(&ticks);
       release(&tickslock);
     }
+	// 割り込みがあったことをLAPICに伝える
     lapiceoi();
     break;
   // diskからの割り込み通知

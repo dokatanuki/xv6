@@ -50,7 +50,7 @@ idewait(int checkerr)
 
 // IDE: Integrated Device Electronics
 // I/Oインタフェース
-// バスの規格
+// I/O APICのIDE割り込みを有効化
 void
 ideinit(void)
 {
@@ -63,10 +63,12 @@ ideinit(void)
   idewait(0);
 
   // Check if disk 1 is present
+  // 0x1f6が指すportの4bit目が1ならディスク01を使用することを意味する
   outb(0x1f6, 0xe0 | (1<<4));
   // busyループもどき
   for(i=0; i<1000; i++){
     if(inb(0x1f7) != 0){
+	  // ディスク01が存在するかどうかのフラグ
       havedisk1 = 1;
       break;
     }

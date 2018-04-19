@@ -1,12 +1,15 @@
 // Per-CPU state
 struct cpu {
+  // LAPICから読み出す
   uchar apicid;                // Local APIC ID
+  // cpu->schedulerはcontextの位置を指している
   struct context *scheduler;   // swtch() here to enter scheduler
-  // TBC: procを持ってるからそこからkstackを特定すればよいのでは？
+  // int命令によってCPUから使用されるもの: 割り込み処理の前に，レジスタを保存しなくてはいけないが，その際に利用される保存先のスタックを指定する
   struct taskstate ts;         // Used by x86 to find stack for interrupt
   struct segdesc gdt[NSEGS];   // x86 global descriptor table
   volatile uint started;       // Has the CPU started?
   int ncli;                    // Depth of pushcli nesting.
+  // ncli=0でpushcliが呼び出されたときのeflagsの値を保持しておく
   int intena;                  // Were interrupts enabled before pushcli?
   struct proc *proc;           // The process running on this cpu or null
 };

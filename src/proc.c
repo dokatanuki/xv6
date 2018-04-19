@@ -35,20 +35,23 @@ cpuid() {
 // Must be called with interrupts disabled to avoid the caller being
 // rescheduled between reading lapicid and running through the loop.
 // 割り込みを無効化した状態で呼ばれる必要がある
+// この関数の実行の中で割り込みが許可されている場合，lapicidの読み出し後にスケジューリングされて現在実行されているCPUではないCPUの構造体を返してしまうかもしれない
 struct cpu*
 mycpu(void)
 {
   // APIC(Advanced Programmable Interrupt Controller, エイピック): インテルにより開発された、x86アーキテクチャにおける割り込みコントローラ
+  // LAPICのuniqueid
   int apicid, i;
-  
+
   // FLAGS register contains the current state of the processor
   if(readeflags()&FL_IF)
     panic("mycpu called with interrupts enabled\n");
-  
+
+  // LAPICからIDを読み出す
   apicid = lapicid();
   // APIC IDs are not guaranteed to be contiguous. Maybe we should have
   // a reverse map, or reserve a register to store &cpus[i].
-  // apicはCPUに固有の値？であるため，apicidが一致するcpuを探せばよい
+  // lapicidが一致するcpuの構造体を取り出す
   for (i = 0; i < ncpu; ++i) {
     if (cpus[i].apicid == apicid)
       return &cpus[i];
@@ -354,6 +357,8 @@ scheduler(void)
     // Enable interrupts on this processor.
 	// 初期化の間cli()で割り込みが無効化されている
 	// 割り込みを有効化する(割り込みを受け取るようになる)
+	// RUNNABLEなプロセスがなくて，ずっと割り込みできない状態であるとした場合，I/O処理が完了したという割り込みをCPUが受け取れないため，
+	// I/O待ちでSLEEPINGしていたプロセスがいつまでたってもRUNNABLEにならない(Diskを例としてあげるなら，ideintrがいつまでも呼ばれないということ)
     sti();
 
     // Loop over process table looking for process to run.
@@ -381,12 +386,15 @@ scheduler(void)
 		};
 	  */
       swtch(&(c->scheduler), p->context);
+	  // Schedでここから再開
+	  // この段階で実行されているのかschedulerのみであり，ユーザは存在しない．
       switchkvm();
 
       // Process is done running for now.
       // It should have changed its p->state before coming back.
       c->proc = 0;
     }
+	// RUNNABLEが存在しない場合，&ptable.lockを解放してあげないと，ptableを誰もいじれないため，何かしらのプロセスをRUNNABLEにセットすることもできない
     release(&ptable.lock);
 
   }
@@ -413,8 +421,11 @@ sched(void)
     panic("sched running");
   if(readeflags()&FL_IF)
     panic("sched interruptible");
+  // cpuのフラグを保持(切り替わったプロセス側でcpuのフラグが変化するかもしれないから)
   intena = mycpu()->intena;
+  // schedulerを呼び出す
   swtch(&p->context, mycpu()->scheduler);
+  // cpuのフラグを復元
   mycpu()->intena = intena;
 }
 
@@ -447,6 +458,7 @@ forkret(void)
     initlog(ROOTDEV);
   }
 
+  // スタックから呼び出し元の番地を取り出してその番地にリターンするが，それはuserinitでtrapretに設定されている
   // 呼び出し元に戻る(trapret)
   // Return to "caller", actually trapret (see allocproc).
 }

@@ -17,6 +17,8 @@ extern char end[]; // first address after kernel loaded from ELF file
 int
 main(void)
 {
+  // ここの呼び出しの段階で動いているスレッドがschedulerのスレッドとなる
+  // TBC: espはどこを指している？
   // 4MB+KERNBASE-end分の領域を解放し、カーネルのフリーリストにつなげる
   // 仮想アドレス空間における範囲を指定している
   kinit1(end, P2V(4*1024*1024)); // phys page allocator
