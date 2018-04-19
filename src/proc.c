@@ -256,6 +256,7 @@ exit(void)
   struct proc *p;
   int fd;
 
+  // initprocはpid=0であり，すべての親
   if(curproc == initproc)
     panic("init exiting");
 
@@ -272,15 +273,22 @@ exit(void)
   end_op();
   curproc->cwd = 0;
 
+  // プロセステーブルのロック獲得
   acquire(&ptable.lock);
 
   // Parent might be sleeping in wait().
+  // waitしている親プロセスを起床する
+  // 親プロセスはプロセステーブルのロックを獲得して起床するが，
+  // いまそのロックを自分が獲得しているため，こちらの処理が終わるまでは終了処理に入らない
   wakeup1(curproc->parent);
 
   // Pass abandoned children to init.
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+	// 自分が親になっていて，子プロセスの終了を待っていなかった場合，initprocを親に変更する
     if(p->parent == curproc){
       p->parent = initproc;
+	  // 子プロセスがすでに終了してしまっている場合
+	  // initprocに処理してもらう
       if(p->state == ZOMBIE)
         wakeup1(initproc);
     }
@@ -301,6 +309,7 @@ wait(void)
   int havekids, pid;
   struct proc *curproc = myproc();
   
+  // ptableを探索するためにptableのロックを獲得
   acquire(&ptable.lock);
   for(;;){
     // Scan through table looking for exited children.
@@ -309,6 +318,8 @@ wait(void)
       if(p->parent != curproc)
         continue;
       havekids = 1;
+	  // 子プロセスが見つかり，かつそのプロセスが終了している場合
+	  // 子プロセスが使用していた領域やページテーブルそのものの領域を解放し，プロセステーブルを初期化する
       if(p->state == ZOMBIE){
         // Found one.
         pid = p->pid;
@@ -325,6 +336,7 @@ wait(void)
       }
     }
 
+	// 子プロセスを持っていないもしくはキルされた
     // No point waiting if we don't have any children.
     if(!havekids || curproc->killed){
       release(&ptable.lock);
@@ -332,6 +344,7 @@ wait(void)
     }
 
     // Wait for children to exit.  (See wakeup1 call in proc_exit.)
+	// 子プロセスが終了するまで待つ
     sleep(curproc, &ptable.lock);  //DOC: wait-sleep
   }
 }

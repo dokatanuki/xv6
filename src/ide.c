@@ -164,6 +164,9 @@ iderw(struct buf *b)
   if(b->dev != 0 && !havedisk1)
     panic("iderw: ide disk 1 not present");
 
+  // sleepを実行するまえにロックを獲得する
+  // 条件を調べて，スリープに入る前にwakeupが実行されないように
+  // ideintrでもidelockを獲得しているはず
   acquire(&idelock);  //DOC:acquire-lock
 
   // Append b to idequeue.
