@@ -32,7 +32,9 @@
 // Contents of the header block, used for both the on-disk header block
 // and to keep track in memory of logged block# before commit.
 struct logheader {
+  // 現在のlogの数
   int n;
+  // sector numberの配列
   int block[LOGSIZE];
 };
 
@@ -40,6 +42,7 @@ struct log {
   struct spinlock lock;
   int start;
   int size;
+  // 現在実行中のファイル関係のシステムコール
   int outstanding; // how many FS sys calls are executing.
   int committing;  // in commit(), please wait.
   int dev;
@@ -123,17 +126,23 @@ recover_from_log(void)
 
 // called at the start of each FS system call.
 // ファイルシステムに関するシステムコールではじめに呼ばれる
+// logの記録を開始する
 void
 begin_op(void)
 {
+  // logを使用するためのロック
   acquire(&log.lock);
   while(1){
+	// commitしている最中であるならば，それが終わるまでsleepする
     if(log.committing){
       sleep(&log, &log.lock);
+	// 現在のlogの数+(いま実行されているFS_syscall+自分自身)*(10: 最悪の場合)が保持できるlogの数を超えていないか
     } else if(log.lh.n + (log.outstanding+1)*MAXOPBLOCKS > LOGSIZE){
       // this op might exhaust log space; wait for commit.
       sleep(&log, &log.lock);
+	  // 使用可能
     } else {
+	  // 自分自身をsyscallのカウントに追加
       log.outstanding += 1;
       release(&log.lock);
       break;

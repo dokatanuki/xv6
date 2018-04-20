@@ -99,6 +99,8 @@ bget(uint dev, uint blockno)
       b->flags = 0;
       b->refcnt = 1;
       release(&bcache.lock);
+	  // refcntがすでに1であるため，reusedされる心配はないため，
+	  // bcacheをreleaseしたあとでもおっけー
       acquiresleep(&b->lock);
       return b;
     }
@@ -113,15 +115,23 @@ bread(uint dev, uint blockno)
   struct buf *b;
 
   // devのblocknoからblockを読み出す
-  // もしキャッシュになかったらiderwを用いて読み出す
+  // もしキャッシュになかったら空いてるキャッシュに情報だけを詰める
   b = bget(dev, blockno);
+  // キャッシュに入ったばかりの場合はまだデータが入っていないため，ディスクから読み出す
   if((b->flags & B_VALID) == 0) {
     iderw(b);
   }
+  // bを使うときはロックを獲得する
   return b;
 }
 
 // Write b's contents to disk.  Must be locked.
+// b.lockが獲得された状態でないといけない
+// bread(dev, blockno)でb->lockが獲得された状態でbがかえってくるため，
+// lockは獲得されているはずである．
+// 変更が起きた場合にはbwriteを呼んでやってb->flagsにB_DIRTYをセットし，
+// iderwをよびだす
+// 使い終わったらb->lockをreleaseする必要がある
 void
 bwrite(struct buf *b)
 {
