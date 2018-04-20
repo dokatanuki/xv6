@@ -28,22 +28,28 @@
 
 struct {
   struct spinlock lock;
+  // bufferの実体
   struct buf buf[NBUF];
 
   // Linked list of all buffers, through prev/next.
   // head.next is most recently used.
+  // LRUであり，使われたバッファは先頭につなぎ直す
+  // cacheへのアクセスはbufではなくheadからのリストを介して行われる
   struct buf head;
 } bcache;
 
+// 双方向リストであるバッファリストを初期化する
 void
 binit(void)
 {
   struct buf *b;
 
+  // bcacheのlockを初期化
   initlock(&bcache.lock, "bcache");
 
 //PAGEBREAK!
   // Create linked list of buffers
+  // 自分自身を指すようにリストを初期化
   bcache.head.prev = &bcache.head;
   bcache.head.next = &bcache.head;
   for(b = bcache.buf; b < bcache.buf+NBUF; b++){
@@ -63,6 +69,7 @@ bget(uint dev, uint blockno)
 {
   struct buf *b;
 
+  // buffer cache をロックする
   acquire(&bcache.lock);
 
   // Is the block already cached?
@@ -70,6 +77,8 @@ bget(uint dev, uint blockno)
     if(b->dev == dev && b->blockno == blockno){
       b->refcnt++;
       release(&bcache.lock);
+	  // buffer単位でsleeplock
+	  // これからこのバッファを使うからロックを獲得
       acquiresleep(&b->lock);
       return b;
     }
@@ -78,10 +87,15 @@ bget(uint dev, uint blockno)
   // Not cached; recycle an unused buffer.
   // Even if refcnt==0, B_DIRTY indicates a buffer is in use
   // because log.c has modified it but not yet committed it.
+  // bcache.head.prevはリストの末尾
   for(b = bcache.head.prev; b != &bcache.head; b = b->prev){
+	// 現在どのスレッドも使用していなくて，書き戻しも必要ない
     if(b->refcnt == 0 && (b->flags & B_DIRTY) == 0) {
       b->dev = dev;
       b->blockno = blockno;
+	  // flagsはB_VALIDでもB_DIRTYでもない
+	  // breadによってdiskから正しく読みだしてくれる
+	  // B_VALIDだったら以前のdataを使用してしまう
       b->flags = 0;
       b->refcnt = 1;
       release(&bcache.lock);
@@ -98,6 +112,8 @@ bread(uint dev, uint blockno)
 {
   struct buf *b;
 
+  // devのblocknoからblockを読み出す
+  // もしキャッシュになかったらiderwを用いて読み出す
   b = bget(dev, blockno);
   if((b->flags & B_VALID) == 0) {
     iderw(b);

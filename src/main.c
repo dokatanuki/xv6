@@ -40,6 +40,7 @@ main(void)
   pinit();         // process table
   // Interrupt Descriptor Table(IDT)にgatedescriptorをセットする
   tvinit();        // trap vectors
+  // バッファキャッシュの初期化
   binit();         // buffer cache
   fileinit();      // file table
   // IDE接続のデバイス(Diskなど)のセットアップ(I/Oデバイスの割り込みを有効化)

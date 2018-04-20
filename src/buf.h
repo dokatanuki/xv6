@@ -1,5 +1,5 @@
 // diskのブロックのデータ管理
-// TBC: ディスク内の実体とのデータの整合性をいかにして保つのか
+// bufはI/O処理が必要であるため，ロックの獲得に時間がかかる->sleeplock
 struct buf {
   // データの状態を意味する(B_VALID, B_DIRTY)
   int flags;
@@ -8,6 +8,7 @@ struct buf {
   // セクター番号
   uint blockno;
   struct sleeplock lock;
+  // reference count: 現在参照しているスレッドの数
   uint refcnt;
   struct buf *prev; // LRU cache list
   struct buf *next;

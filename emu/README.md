@@ -25,6 +25,12 @@ $ ./setup_buildtools.sh
 -#QEMU = 
 +QEMU = /usr/bin/qemu-system-i386
 ```
+You should disable compiler optimization.
+```
+-CFLAGS = -fno-pic -static -fno-builtin -fno-strict-aliasing -02 ...
++CFLAGS = -fno-pic -static -fno-builtin -fno-strict-aliasing -fvar-tracking -fvar-...
+```
+
 4. Emulate xv6
 ```
 $ make qemu-nox
