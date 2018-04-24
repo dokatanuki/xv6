@@ -17,6 +17,7 @@
 // A system call should call begin_op()/end_op() to mark
 // its start and end. Usually begin_op() just increments
 // the count of in-progress FS system calls and returns.
+// commit中であればそれが終わるまでsleepする
 // But if it thinks the log is close to running out, it
 // sleeps until the last outstanding end_op() commits.
 //
@@ -142,7 +143,8 @@ begin_op(void)
       sleep(&log, &log.lock);
 	  // 使用可能
     } else {
-	  // 自分自身をsyscallのカウントに追加
+	  // 自分自身をsyscallのカウントに追加: ログの領域を予約する
+	  // この処理の間にcommitが起きるのを防ぐ
       log.outstanding += 1;
       release(&log.lock);
       break;
@@ -172,6 +174,7 @@ end_op(void)
   }
   release(&log.lock);
 
+  // 他にFS system callを実行しているスレッドがなかった場合
   if(do_commit){
     // call commit w/o holding locks, since not allowed
     // to sleep with locks.
@@ -199,6 +202,7 @@ write_log(void)
   }
 }
 
+// logのコミット
 static void
 commit()
 {
@@ -225,6 +229,7 @@ log_write(struct buf *b)
 {
   int i;
 
+  // 現在のログの数が限界か，
   if (log.lh.n >= LOGSIZE || log.lh.n >= log.size - 1)
     panic("too big a transaction");
   if (log.outstanding < 1)
@@ -232,6 +237,8 @@ log_write(struct buf *b)
 
   acquire(&log.lock);
   for (i = 0; i < log.lh.n; i++) {
+	// ログの更新(すでにログに入っているブロックであった場合)
+	// ログの領域の節約，ディスクへの書き込み回数を軽減
     if (log.lh.block[i] == b->blockno)   // log absorbtion
       break;
   }

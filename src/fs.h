@@ -22,23 +22,30 @@ struct superblock {
 };
 
 #define NDIRECT 12
+// バッファへのポインタの配列
 #define NINDIRECT (BSIZE / sizeof(uint))
 #define MAXFILE (NDIRECT + NINDIRECT)
 
 // On-disk inode structure
+// ディスク上のinodeの構造
 struct dinode {
+  // file, directory, もしくはデバイスなど
   short type;           // File type
   short major;          // Major device number (T_DEV only)
   short minor;          // Minor device number (T_DEV only)
+  // このinodeを参照しているディレクトリの数(hardlinkではnlinkが増加, symbliclinkでは増加しない)
   short nlink;          // Number of links to inode in file system
   uint size;            // Size of file (bytes)
+  // このinodeの実体ブロックへのアドレスの配列
   uint addrs[NDIRECT+1];   // Data block addresses
 };
 
 // Inodes per block.
+// バッファにいくつのinodeが入るか
 #define IPB           (BSIZE / sizeof(struct dinode))
 
 // Block containing inode i
+// inode iが格納されているbufferのblock no
 #define IBLOCK(i, sb)     ((i) / IPB + sb.inodestart)
 
 // Bitmap bits per block
@@ -51,6 +58,7 @@ struct dinode {
 #define DIRSIZ 14
 
 struct dirent {
+  // inum=0はfreeであることを示している
   ushort inum;
   char name[DIRSIZ];
 };

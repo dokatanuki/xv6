@@ -192,6 +192,7 @@ static struct inode* iget(uint dev, uint inum);
 // Allocate an inode on device dev.
 // Mark it as allocated by  giving it type type.
 // Returns an unlocked but allocated and referenced inode.
+// ファイルを作成する際に呼び出される
 struct inode*
 ialloc(uint dev, short type)
 {
@@ -199,8 +200,13 @@ ialloc(uint dev, short type)
   struct buf *bp;
   struct dinode *dip;
 
+  // sb: superblock
   for(inum = 1; inum < sb.ninodes; inum++){
+	// lockされたbufferが帰ってくる
+	// inodeが格納されているバッファを獲得できるのは一つのプロセスのみ
     bp = bread(dev, IBLOCK(inum, sb));
+	// bp: inodeが格納されているバッファのメタデータへのポインタ
+	// dip = 該当するinodeがある位置
     dip = (struct dinode*)bp->data + inum%IPB;
     if(dip->type == 0){  // a free inode
       memset(dip, 0, sizeof(*dip));
@@ -218,6 +224,10 @@ ialloc(uint dev, short type)
 // Must be called after every change to an ip->xxx field
 // that lives on disk, since i-node cache is write-through.
 // Caller must hold ip->lock.
+// inodeの内容を変更した際に呼び出されなくてはならない関数
+// write-throughであり，すぐにディスクに書き戻す
+// on-memory inodeからbufのメタデータを取り出し，データの実体の位置を特定する
+//
 void
 iupdate(struct inode *ip)
 {
@@ -239,21 +249,26 @@ iupdate(struct inode *ip)
 // Find the inode with number inum on device dev
 // and return the in-memory copy. Does not lock
 // the inode and does not read it from disk.
+// メモリ上のinodeを返す
 static struct inode*
 iget(uint dev, uint inum)
 {
   struct inode *ip, *empty;
 
+  // icacheはメモリ上のinodeへのアクセスに使われる
+  // refを変更するためにロックを獲得する
   acquire(&icache.lock);
 
   // Is the inode already cached?
   empty = 0;
   for(ip = &icache.inode[0]; ip < &icache.inode[NINODE]; ip++){
+	// すでにキャッシュに存在している
     if(ip->ref > 0 && ip->dev == dev && ip->inum == inum){
       ip->ref++;
       release(&icache.lock);
       return ip;
     }
+	// 誰も参照していないinodeが存在->キャッシュが空いている->emptyに空いているinodeへのポインタを保持
     if(empty == 0 && ip->ref == 0)    // Remember empty slot.
       empty = ip;
   }
@@ -285,6 +300,8 @@ idup(struct inode *ip)
 
 // Lock the given inode.
 // Reads the inode from disk if necessary.
+// inode ipを使用するための準備
+// 必要に応じてdiskの中身をメモリ上のinodeに読み出す
 void
 ilock(struct inode *ip)
 {
@@ -297,7 +314,9 @@ ilock(struct inode *ip)
   acquiresleep(&ip->lock);
 
   if(ip->valid == 0){
+	// inodeの実体が格納されているbufferへのポインタ
     bp = bread(ip->dev, IBLOCK(ip->inum, sb));
+	// bufのどこに該当のinodeの実体のデータが存在しているか
     dip = (struct dinode*)bp->data + ip->inum%IPB;
     ip->type = dip->type;
     ip->major = dip->major;
@@ -332,8 +351,10 @@ iunlock(struct inode *ip)
 void
 iput(struct inode *ip)
 {
+  // inode ipを使用するためのロック
   acquiresleep(&ip->lock);
   if(ip->valid && ip->nlink == 0){
+	// ipの正しいrefを取得するためにicacheをロック
     acquire(&icache.lock);
     int r = ip->ref;
     release(&icache.lock);
@@ -347,6 +368,7 @@ iput(struct inode *ip)
   }
   releasesleep(&ip->lock);
 
+  // trancateしてfreeされるまでcacheの再利用が起きないように，trancateが終わってからref--を行う
   acquire(&icache.lock);
   ip->ref--;
   release(&icache.lock);
@@ -370,17 +392,20 @@ iunlockput(struct inode *ip)
 
 // Return the disk block address of the nth block in inode ip.
 // If there is no such block, bmap allocates one.
+// readi, writeiが該当のディスクに楽にアクセスできるようにするhelper
 static uint
 bmap(struct inode *ip, uint bn)
 {
   uint addr, *a;
   struct buf *bp;
 
+  // indirectテーブルを見なくてもいい
   if(bn < NDIRECT){
     if((addr = ip->addrs[bn]) == 0)
       ip->addrs[bn] = addr = balloc(ip->dev);
     return addr;
   }
+  // indirectテーブルを見に行く
   bn -= NDIRECT;
 
   if(bn < NINDIRECT){
@@ -388,6 +413,7 @@ bmap(struct inode *ip, uint bn)
     if((addr = ip->addrs[NDIRECT]) == 0)
       ip->addrs[NDIRECT] = addr = balloc(ip->dev);
     bp = bread(ip->dev, addr);
+	// inodeのデータ配列の先頭
     a = (uint*)bp->data;
     if((addr = a[bn]) == 0){
       a[bn] = addr = balloc(ip->dev);
@@ -531,16 +557,21 @@ dirlookup(struct inode *dp, char *name, uint *poff)
   if(dp->type != T_DIR)
     panic("dirlookup not DIR");
 
+  // directory entryを探索
   for(off = 0; off < dp->size; off += sizeof(de)){
     if(readi(dp, (char*)&de, off, sizeof(de)) != sizeof(de))
       panic("dirlookup read");
+	// freeエントリー
     if(de.inum == 0)
       continue;
+	// 一致するエントリが見つかった
     if(namecmp(name, de.name) == 0){
       // entry matches path element
+	  // directory entryのindexをpoffにセットして呼び出し元に返す
       if(poff)
         *poff = off;
       inum = de.inum;
+	  // TBC: dp以外が返るのはどんなとき？
       return iget(dp->dev, inum);
     }
   }

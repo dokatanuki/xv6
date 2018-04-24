@@ -20,7 +20,7 @@ alltraps:
   movw %ax, %es
 
   # Call trap(tf), where tf=%esp
-  # 引数を積む
+  # 引数を積む, espはtrapの引数
   pushl %esp
   # 返り値を積んでtrapに飛ぶ
   # trapでは状況に応じてユーザスタックに積まれた引数を見て，対応する割り込みハンドラを実行する 

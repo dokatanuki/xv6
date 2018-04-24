@@ -118,6 +118,7 @@ bread(uint dev, uint blockno)
   // もしキャッシュになかったら空いてるキャッシュに情報だけを詰める
   b = bget(dev, blockno);
   // キャッシュに入ったばかりの場合はまだデータが入っていないため，ディスクから読み出す
+  // 有効でないバッファを有効にする
   if((b->flags & B_VALID) == 0) {
     iderw(b);
   }
@@ -131,6 +132,7 @@ bread(uint dev, uint blockno)
 // lockは獲得されているはずである．
 // 変更が起きた場合にはbwriteを呼んでやってb->flagsにB_DIRTYをセットし，
 // iderwをよびだす
+// ブロックの変更をディスクの中に同期するトリガーとなる関数
 // 使い終わったらb->lockをreleaseする必要がある
 void
 bwrite(struct buf *b)
@@ -143,6 +145,7 @@ bwrite(struct buf *b)
 
 // Release a locked buffer.
 // Move to the head of the MRU list.
+// バッファの使用終了処理
 void
 brelse(struct buf *b)
 {

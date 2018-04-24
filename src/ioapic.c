@@ -22,6 +22,7 @@
 #define INT_ACTIVELOW  0x00002000  // Active low (vs high)
 #define INT_LOGICAL    0x00000800  // Destination is CPU id (vs APIC ID)
 
+// volatile: ioapic変数に関する処理をコンパイラの最適化の対象外とする
 volatile struct ioapic *ioapic;
 
 // IO APIC MMIO structure: write reg, then read or write data.
@@ -43,6 +44,7 @@ static void
 ioapicwrite(int reg, uint data)
 {
   // 仕様書で定義されている番号を入れてやると，IOAPICが内部で対応するエントリにdataを代入してくれる
+  // ioapicがvolatileでない場合は，順番が入れ替わる可能性がある
   ioapic->reg = reg;
   ioapic->data = data;
 }

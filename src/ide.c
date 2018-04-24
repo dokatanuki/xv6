@@ -182,9 +182,10 @@ iderw(struct buf *b)
 	// diskの処理開始, 終わったら割り込みを入れてくる？
     idestart(b);
 
+  // acquireでpopcli
   // Wait for request to finish.
   while((b->flags & (B_VALID|B_DIRTY)) != B_VALID){
-	// TBC: 誰がwakeする？diskからbufの処理完了のwakeが来るまでスリープする
+	// diskの処理が完了したら，ioapic経由でdiskから割り込みが発生する(ideintr)
     sleep(b, &idelock);
   }
 

@@ -8,7 +8,7 @@ struct buf {
   // セクター番号
   uint blockno;
   struct sleeplock lock;
-  // reference count: 現在参照しているスレッドの数
+  // reference count: 現在参照しているスレッドの数, buffer cacheの処理で利用される
   uint refcnt;
   struct buf *prev; // LRU cache list
   struct buf *next;

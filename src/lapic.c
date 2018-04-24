@@ -43,6 +43,7 @@
 
 // LAPIC: Local Advanced Programmable Interrupt Controller
 // 外部からの割り込みに加え, I/O処理やマルチプロセッサのCPU間通信(IPI: Inter-Processor Interrupt)も処理する
+// volatile: lapicに関する処理をコンパイラの最適化の対象外とする
 volatile uint *lapic;  // Initialized in mp.c
 
 //PAGEBREAK!

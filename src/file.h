@@ -13,6 +13,8 @@ struct file {
 struct inode {
   uint dev;           // Device number
   uint inum;          // Inode number
+  // このinodeを参照しているCのポインタの数
+  // 0になったらメモリから退去させる
   int ref;            // Reference count
   struct sleeplock lock; // protects everything below here
   int valid;          // inode has been read from disk?
@@ -22,6 +24,7 @@ struct inode {
   short minor;
   short nlink;
   uint size;
+  // addrs[NDIRECT]にはさらにaddrsの配列が格納されている
   uint addrs[NDIRECT+1];
 };
 
