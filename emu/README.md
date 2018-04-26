@@ -100,6 +100,7 @@ $ gdb kernel
 
 ### xv6
 - `xv6にコマンドを追加する`  
+
 追加するコマンドがprogram.cに記述されているとする．  
 program.cをxv6\_publicに追加し，MakefileのUPROGSにprogramを追加する．  
 ```
