@@ -1,95 +1,64 @@
 # Emulate xv6 in VM
 
 ## Overview
-Set up environment emulating xv6 by qemu.
+QEMUを用いてxv6をエミュレートする．
 
 ## Requirement
 - VirtualBox
 - Vagrant
 
-## Installation
-1. Set up Vagrantfile and VirtualMachine
-```
-$ git clone https://github.com/dokatanuki/xv6/emu
-$ ./setup_vm.sh
+## Install and setup environment
+1. `適当な作業用ディレクトリに移動する`
+```sh
+$ cd ~/workspace/xv6_emu
 ```
 
-2. Login ubuntu and execute shell script
+2. `セットアップ用のshell scriptを取得する`
+```sh
+$ curl https://raw.githubusercontent.com/dokatanuki/xv6/master/emu/setup_vm.sh > setup_vm.sh
+$ curl https://raw.githubusercontent.com/dokatanuki/xv6/master/emu/setup_buildtools.sh > setup_buildtools.sh 
 ```
+
+3. `Vagrant(VirtualBox)のセットアップを行う`
+```sh
+$ bash setup_vm.sh
+```
+
+4. `仮想環境にログインし，ツールをインストールする`
+```sh
 $ vagrant ssh
-$ ./setup_buildtools.sh
+$ bash setup_buildtools.sh
 ```
 
-3. Change into xv6\_public and modify Makefile
+5. `Makefileを修正する`
+```sh
+$ cd ~/xv6_public
+$ vim Makefile
 ```
--#QEMU = 
-+QEMU = /usr/bin/qemu-system-i386
+修正箇所は以下の通りである．  
 ```
-You should disable compiler optimization.
+- #QEMU = 
++ QEMU = /usr/bin/qemu-system-i386
 ```
--CFLAGS = -fno-pic -static -fno-builtin -fno-strict-aliasing -02 ...
-+CFLAGS = -fno-pic -static -fno-builtin -fno-strict-aliasing -fvar-tracking -fvar-...
 ```
-
-4. Emulate xv6
+- CFLAGS = -fno-pic -static -fno-builtin -fno-strict-aliasing -02 ...
++ CFLAGS = -fno-pic -static -fno-builtin -fno-strict-aliasing -fvar-tracking -fvar-...
 ```
-$ make qemu-nox
-```
-
-## ctags
-If you use vim editor, I recommends to install ctags
-```
-$ sudo apt-get install ctags -y
-```
-Change into xv6\_public and generate tags
-```
-$ cd xv6_public
-$ ctags -R
-```
-Then get .vimrc and open xv6 programs by vim and update plugin
-```
-$ curl https://raw.githubusercontent.com/dokatanuki/dotfiles/master/.vimrc > ~/.vimrc
-$ vim
-
-# in vim
-:PlugInstall
-```
-You can use ctags in vim
-```
-# on the code you wanna check define
-jump to define: <C-]>
-back to prev line: <C-o>
-```
-
 
 ## Note
 ### QEMU
-- terminate qemu
+- `QEMUを終了する`
 ```
 <C-a> x
 ```
 
-### xv6
-- add command to xv6
-
-Add your program.c in xv6\_public and modify Makefile
-```
-UPROGS=\
-	_cat\
-	_echo\
-	.
-	.
-	.
-	_program\
-```
-Remake xv6 then your program is added
-
-- debug xv6
-Emulate xv6
+- `xv6をgdbでデバッグする`
+1. xv6\_publicディレクトリ内でqemuを実行する．  
 ```
 $ make qemu-nox-dbg
 ```
-Open another terminal and run gdb
+
+2. 別のターミナルからvagrantにsshで接続し，xv6\_publicディレクトリで以下のコマンド群を実行する．  
 ```
 $ gdb kernel
 (gdb) target remote localhost:26000
@@ -99,7 +68,45 @@ $ gdb kernel
 (gdb) la src
 (gdb) cont
 ```
+sourceを実行したのちは普通のgdbと同様の処理である．  
+プログラムの実行順が不規則である場合，コンパイラの最適化を外し忘れている可能性がある．  
 
+### gdb tips
+- ソースコード，レジスタを表示する
+```
+(gdb) la src
+(gdb) la regs
+```
+
+- ローカル変数，実引数を表示する
+```
+(gdb) info locals
+(gdb) info args
+```
+
+- バックトレース(現在実行している処理にたどり着く過程)
+```
+(gdb) bt
+```
+
+- 式を評価して表示
+```
+(gdb) p hoge
+```
+
+### xv6
+- `xv6にコマンドを追加する`
+追加するコマンドがprogram.cに記述されているとする．  
+program.cをxv6\_publicに追加し，MakefileのUPROGSにprogramを追加する．  
+```
+UPROGS=\
+	_cat\
+	_echo\
+	.
+	.
+	.
+	_program\
+```
 
 ## Reference
 [xv6のデバッグ環境をつくる](https://qiita.com/ksky/items/974ad1249cfb2dcf5437 "xv6のデバッグ環境をつくる")  

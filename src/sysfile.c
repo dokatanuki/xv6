@@ -115,22 +115,30 @@ sys_fstat(void)
 }
 
 // Create the path new as a link to the same inode as old.
+// hardlink
 int
 sys_link(void)
 {
   char name[DIRSIZ], *new, *old;
   struct inode *dp, *ip;
 
+  // 二つの引数の取得
   if(argstr(0, &old) < 0 || argstr(1, &new) < 0)
     return -1;
 
+  // transactionの開始
+  // logを保存するスペースを確保する
   begin_op();
+  // oldが指すinodeを指す新しいpathを作りたいのに，inodeが見つからない
   if((ip = namei(old)) == 0){
     end_op();
     return -1;
   }
 
+  // ipを参照, 変更するため
   ilock(ip);
+  // TBC: なぜディレクトリへのハードリンクは作れない？
+  // ディレクトリはinodeとnameの対応表であり，ディレクトリに別名ができてしまうと正しくパスを解決することができないため？
   if(ip->type == T_DIR){
     iunlockput(ip);
     end_op();
@@ -151,6 +159,7 @@ sys_link(void)
   iunlockput(dp);
   iput(ip);
 
+  // transactionの終了
   end_op();
 
   return 0;

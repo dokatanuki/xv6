@@ -1,0 +1,17 @@
+@startuml
+title inode flow
+start
+
+if (create a new inode?) then (yes)
+:iallock;
+else (no)
+endif
+:iget;
+:ilock;
+floating note right: aquire sleeplock the inode and read it from disk(mostly from buffer cache)
+:iunlock;
+floating note right: release sleeplock the inode
+:iput;
+
+stop
+@enduml

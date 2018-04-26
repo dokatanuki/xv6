@@ -10,8 +10,10 @@ struct buf {
   struct sleeplock lock;
   // reference count: 現在参照しているスレッドの数, buffer cacheの処理で利用される
   uint refcnt;
+  // cache用の変数
   struct buf *prev; // LRU cache list
   struct buf *next;
+  // diskで処理されるbufを連結リストで管理(iderw, ideintrなどで利用される)
   struct buf *qnext; // disk queue
   uchar data[BSIZE];
 };

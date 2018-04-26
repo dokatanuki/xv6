@@ -41,6 +41,7 @@ struct logheader {
 
 struct log {
   struct spinlock lock;
+  // diskのうちのログが格納されている場所
   int start;
   int size;
   // 現在実行中のファイル関係のシステムコール
