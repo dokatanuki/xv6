@@ -52,13 +52,18 @@ $ vim Makefile
 <C-a> x
 ```
 
+- `xv6をqemu上で起動する`
+```
+$ make qemu-nox
+```
+
 - `xv6をgdbでデバッグする`
 1. xv6\_publicディレクトリ内でqemuを実行する．  
 ```
 $ make qemu-nox-dbg
 ```
 
-2. 別のターミナルからvagrantにsshで接続し，xv6\_publicディレクトリで以下のコマンド群を実行する．  
+2. 別のターミナルからvagrant sshで接続し，xv6\_publicディレクトリで以下のコマンド群を実行する．  
 ```
 $ gdb kernel
 (gdb) target remote localhost:26000
@@ -68,7 +73,6 @@ $ gdb kernel
 (gdb) la src
 (gdb) cont
 ```
-sourceを実行したのちは普通のgdbと同様の処理である．  
 プログラムの実行順が不規則である場合，コンパイラの最適化を外し忘れている可能性がある．  
 
 ### gdb tips
