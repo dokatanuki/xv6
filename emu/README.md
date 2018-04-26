@@ -47,17 +47,17 @@ $ vim Makefile
 
 ## Note
 ### QEMU
-- `QEMUを終了する`
+`QEMUを終了する`
 ```
 <C-a> x
 ```
 
-- `xv6をqemu上で起動する`
+`xv6をqemu上で起動する`
 ```
 $ make qemu-nox
 ```
 
-- `xv6をgdbでデバッグする`
+`xv6をgdbでデバッグする`
 1. xv6\_publicディレクトリ内でqemuを実行する．  
 ```
 $ make qemu-nox-dbg
@@ -76,30 +76,30 @@ $ gdb kernel
 プログラムの実行順が不規則である場合，コンパイラの最適化を外し忘れている可能性がある．  
 
 ### gdb tips
-- ソースコード，レジスタを表示する
+`ソースコード，レジスタを表示する`
 ```
 (gdb) la src
 (gdb) la regs
 ```
 
-- ローカル変数，実引数を表示する
+`ローカル変数，実引数を表示する`
 ```
 (gdb) info locals
 (gdb) info args
 ```
 
-- バックトレース(現在実行している処理にたどり着く過程)
+`バックトレース(現在実行している処理にたどり着く過程)`
 ```
 (gdb) bt
 ```
 
-- 式を評価して表示
+`式を評価して表示`
 ```
 (gdb) p hoge
-```
+````
 
 ### xv6
-- `xv6にコマンドを追加する`  
+`xv6にコマンドを追加する`  
 
 追加するコマンドがprogram.cに記述されているとする．  
 program.cをxv6\_publicに追加し，MakefileのUPROGSにprogramを追加する．  
