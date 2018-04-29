@@ -362,6 +362,7 @@ iput(struct inode *ip)
       // inode has no links and no other references: truncate and free.
       itrunc(ip);
       ip->type = 0;
+	  // in-memory inodeの変更をメモリ上のon-disk inodeに反映する
       iupdate(ip);
       ip->valid = 0;
     }

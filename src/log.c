@@ -243,6 +243,7 @@ log_write(struct buf *b)
     if (log.lh.block[i] == b->blockno)   // log absorbtion
       break;
   }
+  // 変更があったブロックの番号を保持しておく
   log.lh.block[i] = b->blockno;
   if (i == log.lh.n)
     log.lh.n++;

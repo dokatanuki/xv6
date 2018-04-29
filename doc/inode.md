@@ -20,7 +20,7 @@ cacheはあくまで副産物
 	- crashしてもデータの整合性を維持する(transaction)
 	- 複数の書き換え処理を一つの処理として捉えることができる
 
-4. inode (iget, ilock, iunlock, iput)
+4. inode (iget, ilock, iupdate, iunlock, iput)
 	- memory上に読み出されたdiskに存在するinodeの実体のコピーであり，inodeによってblockを意味のあるまとまりとして管理する
 	- inodeのメタデータを管理する際に利用される
 

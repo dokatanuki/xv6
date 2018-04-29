@@ -466,8 +466,9 @@ forkret(void)
     // of a regular process (e.g., they call sleep), and thus cannot
     // be run from main().
     first = 0;
-	// ROOTDEV: FSのルートとなるデバイスナンバー
+	// inode cacheの初期化 superblockの読み込みも行う
     iinit(ROOTDEV);
+	// 
     initlog(ROOTDEV);
   }
 
